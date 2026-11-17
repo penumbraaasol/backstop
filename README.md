@@ -137,6 +137,14 @@ API: `GET /markets`, `POST /quote`, `GET /policies/:address`, `GET /policy/:id`,
 - `sandbox` places real orders on `api.sandbox.gemini.com`.
 - `live` places real production orders, capped at `MAX_LIVE_CONTRACTS` (default 5).
 
+### Gemini integration notes (verified this week)
+
+- **Sandbox supports prediction-market orders.** `api.sandbox.gemini.com` accepts `POST /v1/prediction-markets/order`. It lists the same instrument symbols as production but has its own order books and prices. `pnpm gemini:check --env sandbox --order` places one 1-contract buy at $0.01 and cancels it.
+- **Order IDs are 64-bit** (e.g. `145853902320512524`), larger than JavaScript's safe-integer range. The SDK returns them as `bigint`; the backend stores them as strings and never turns them into a JS `number`.
+- **Minimum order size.** A 0.01-contract order at $0.01 is rejected with `InvalidInput`; 1 contract at $0.01 is accepted.
+- **Resolution is public.** `GET /v1/prediction-markets/events/{ticker}` reports `resolutionSide: "yes" | "no"` about 5 s after expiry, so resolution needs no API key.
+- **Empty books before a window opens.** A 5-minute contract quotes 0.99 on both sides before its window opens. `/markets` hides such contracts.
+
 ### Run it
 
 ```bash

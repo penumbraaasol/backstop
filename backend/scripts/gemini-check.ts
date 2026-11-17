@@ -37,9 +37,16 @@ if (values.order) {
   const events = ((await res.json()) as { data: Awaited<ReturnType<typeof listEvents>> }).data;
   const target = events
     .flatMap((e) => e.contracts.map((c) => ({ e, c })))
-    .find(({ c }) => c.status === "active" && c.marketState === "open");
+    .find(
+      ({ e, c }) =>
+        c.status === "active" &&
+        c.marketState === "open" &&
+        new Date(e.startTime ?? 0).getTime() < Date.now() &&
+        Object.keys(c.prices?.buy ?? {}).length > 0,
+    );
   if (!target) throw new Error("no open contract found");
-  const qty = target.c.quantityMinimum ?? "1";
+  // 0.01 contracts at $0.01 is rejected as InvalidInput; 1 contract at $0.01 is accepted.
+  const qty = "1";
   console.log(`placing buy YES ${qty} ${target.c.instrumentSymbol} @ 0.01 (good-til-cancel)`);
   try {
     await priv.ensureTerms(env);

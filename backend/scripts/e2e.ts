@@ -56,7 +56,7 @@ const fmt = (b: bigint) => (Number(b) / 1e6).toFixed(6);
 say(`buyer ${account.address} | hedge mode ${conf.hedgeMode} | USDC ${fmt(await usdcBal())}`);
 
 // 1. Pick a market: the soonest short-expiry market for the asset with enough time to hedge.
-const { markets } = await getJson<{ markets: Market[] }>("/markets?perSeries=3");
+const { markets } = await getJson<{ markets: Market[] }>(`/markets?perSeries=${args.symbol ? 50 : 3}`);
 const priced = (m: Market) => Math.min(m.askYes, m.askNo) <= 0.9;
 const market =
   (args.symbol && markets.find((m) => m.instrumentSymbol === args.symbol)) ||
