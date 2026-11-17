@@ -1,0 +1,8 @@
+{
+  "name": "backstop",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "test:contracts": "cd contracts && forge test -vv"
+  }
+}
