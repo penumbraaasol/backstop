@@ -83,4 +83,67 @@ forge verify-contract $BACKSTOP_ADDRESS src/Backstop.sol:Backstop --chain-id 504
 - USDC is both the gas token and the settlement asset, so a buyer only ever needs one balance. Fees are predictable and denominated in dollars.
 - The contract uses the official Circle USDC ERC-20 at `0x3600…0000` (6 decimals). Arc's native gas balance is the same USDC at 18 decimals, so the app shows one USDC balance.
 
-_Economic design, risk assumptions, architecture diagram and backend/frontend docs: coming in later milestones._
+## Economic design
+
+Backstop sells **parametric event cover** that is fully backed by an offsetting prediction-market position. The prediction market serves as both the price oracle and the reinsurer, so there's no underwriting pool and no actuarial model.
+
+| Symbol | Meaning |
+|---|---|
+| N | payout in whole USDC = number of Gemini contracts bought as the hedge |
+| p | Gemini best ask for the covered outcome (`prices.buy.yes` or `prices.buy.no`), 0 to 1 |
+| s | protocol spread (`SPREAD`, default 0.03) |
+
+- Premium = N × (p + s)
+- Hedge cost = N × p
+- Protocol margin = N × s
+- If the covered outcome happens, N contracts settle at $1 each = N USDC, which funds the onchain payout.
+
+Example: N = 100, p = 0.27, s = 0.03 → premium 30 USDC, hedge 27, margin 3. If the event happens, the 100 contracts pay $100, which covers the 100 USDC payout.
+
+Covering YES buys YES contracts; covering NO buys NO contracts. All math is done in integer USDC base units (6 decimals). Quotes are refused when p + s ≥ 1, because cover would then cost more than it pays.
+
+**Gemini fees.** Gemini's taker fee is `0.07 × C × P × (1 − P)` ([fee schedule](https://www.gemini.com/fees/predictions)), which peaks at $0.0175 per contract at P = 0.5. The 3% spread covers the worst-case taker fee with room for slippage. Hedge orders are limit orders capped at p + `MAX_SLIPPAGE` (default 0.02). Note that a fill above the quoted p eats into the margin.
+
+**Capital.** Onchain, every open policy locks its full payout from the treasury float. Offchain, the hedge costs N × p. The float is returned when the Gemini position settles at $1, and the operator rebalances USD → USDC.
+
+## Risk assumptions
+
+- **Trusted relayer.** The backend signs quotes and reports resolutions, so it is a trusted oracle in this prototype. Mitigations: quotes are EIP-712 signed, single-use (nonce), short-lived (60 s) and bound to the buyer. Resolution can be posted once per market and only by the `resolver` role. Future work: multiple signers, or a proof of the Gemini API response (zkTLS).
+- **Hedge execution risk.** The Gemini order may fill worse than quoted, or not at all. Mitigations: a 60 s quote validity, a limit price capped at p + `MAX_SLIPPAGE`, `fill-or-kill` by default (no partial hedges), and an automatic onchain premium refund (`cancelAndRefund`) whenever the hedge doesn't fill.
+- **Settlement float.** Gemini settles in USD offchain, while payouts are USDC onchain. The contract holds a USDC float that is locked against each open policy, and the owner can only withdraw free (unlocked) funds. The operator rebalances after Gemini settlement.
+- **Custodial hedge venue.** All hedge positions sit in one Gemini account.
+- **Exposure caps.** `maxPayoutPerPolicy` and `maxExposurePerMarket` bound the damage from any single failure.
+- **Dead relayer.** If a market is still unresolved `refundGracePeriod` (24 h) after `resolveBy`, the buyer can call `claimRefund` and recover the premium without the backend. Voided Gemini markets fall back to this path.
+- **Timing.** Quotes are refused within `MIN_SECONDS_TO_EXPIRY` (45 s) of a market closing, so the hedge has time to fill before trading stops.
+
+## Backend
+
+`backend/` is Node 22+ with TypeScript (run with `tsx`), Fastify, viem, and SQLite (`node:sqlite`, so there are no native deps).
+
+| Module | Role |
+|---|---|
+| `gemini/public.ts` | Public Gemini Prediction Markets API (no key): events, contracts, best asks, resolution |
+| `gemini/private.ts` | Authenticated client on the official `@gemini-markets/sdk` (HMAC-SHA384): terms, orders, positions |
+| `hedge/venue.ts` | One `HedgeVenue` interface for `HEDGE_MODE` = `simulated` / `sandbox` / `live` |
+| `quotes.ts` | `POST /quote`: prices from the live ask, runs onchain cap and liquidity pre-checks, signs the EIP-712 quote |
+| `indexer.ts` | Polls Backstop events on Arc into SQLite |
+| `hedger.ts` | Buys N contracts of the covered outcome for each new policy; on failure calls `cancelAndRefund` |
+| `resolver.ts` | Polls Gemini for `resolutionSide` after expiry, then calls `resolveMarket` and `settle` |
+
+API: `GET /markets`, `POST /quote`, `GET /policies/:address`, `GET /policy/:id`, `GET /config`, `GET /stats`, `GET /health`.
+
+**Hedge modes.** Market data always comes from Gemini production.
+- `simulated` sends no order. It records a fill at the live production ask if that ask is within the limit price, and otherwise fails, which triggers the refund path. Set `SIMULATE_HEDGE_FAILURE=true` to force the refund path for a demo.
+- `sandbox` places real orders on `api.sandbox.gemini.com`.
+- `live` places real production orders, capped at `MAX_LIVE_CONTRACTS` (default 5).
+
+### Run it
+
+```bash
+corepack pnpm install
+cd backend
+corepack pnpm start                                   # API + workers on :8787
+corepack pnpm e2e --outcome auto --payout 2           # full loop against Arc testnet
+```
+
+The e2e script picks the next priced BTC 5-minute market, gets a signed quote, approves USDC, calls `buyPolicy`, then follows the policy through hedge → Gemini resolution → onchain payout or expiry.

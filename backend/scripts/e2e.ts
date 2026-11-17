@@ -57,10 +57,11 @@ say(`buyer ${account.address} | hedge mode ${conf.hedgeMode} | USDC ${fmt(await 
 
 // 1. Pick a market: the soonest short-expiry market for the asset with enough time to hedge.
 const { markets } = await getJson<{ markets: Market[] }>("/markets?perSeries=3");
+const priced = (m: Market) => Math.min(m.askYes, m.askNo) <= 0.9;
 const market =
   (args.symbol && markets.find((m) => m.instrumentSymbol === args.symbol)) ||
-  markets.find((m) => m.instrumentSymbol.startsWith(`GEMI-${args.asset}05M`) && m.secondsToExpiry >= 75) ||
-  markets.find((m) => m.instrumentSymbol.startsWith(`GEMI-${args.asset}`) && m.secondsToExpiry >= 75);
+  markets.find((m) => m.instrumentSymbol.startsWith(`GEMI-${args.asset}05M`) && m.secondsToExpiry >= 75 && priced(m)) ||
+  markets.find((m) => m.instrumentSymbol.startsWith(`GEMI-${args.asset}`) && m.secondsToExpiry >= 75 && priced(m));
 if (!market) throw new Error(`no suitable ${args.asset} market right now`);
 if (args.outcome === "auto") args.outcome = market.askYes <= market.askNo ? "yes" : "no";
 say(`market ${market.instrumentSymbol}: "${market.question}" closes in ${market.secondsToExpiry}s (ask YES ${market.askYes} / NO ${market.askNo})`);

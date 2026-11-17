@@ -11,7 +11,7 @@ import { curatedMarkets } from "./markets.js";
 import { formatUsdc, makeQuote, QuoteError } from "./quotes.js";
 import { resolveOnce } from "./resolver.js";
 
-const app = Fastify({ logger: { level: "info" } });
+const app = Fastify({ logger: { level: "info" }, disableRequestLogging: true });
 await app.register(cors, { origin: true });
 
 app.get("/health", async () => ({ ok: true, hedgeMode: cfg.HEDGE_MODE }));

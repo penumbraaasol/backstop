@@ -50,6 +50,8 @@ export function toView(e: GeminiEvent, c: GeminiContract): MarketView | undefine
   const askYes = askFor(c, "yes");
   const askNo = askFor(c, "no");
   if (!expiry || askYes == null || askNo == null || !isTradable(c)) return undefined;
+  // Both sides at 0.99 means an empty book (e.g. a 5-minute window that has not opened yet).
+  if (askYes >= 0.99 && askNo >= 0.99) return undefined;
   return {
     instrumentSymbol: c.instrumentSymbol,
     eventTicker: e.ticker,
