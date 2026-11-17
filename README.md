@@ -19,7 +19,10 @@ web/         Next.js app (M4)
 | Contract | Address |
 |---|---|
 | USDC (ERC-20, 6 decimals, official Circle) | [`0x3600000000000000000000000000000000000000`](https://explorer.testnet.arc.io/address/0x3600000000000000000000000000000000000000) |
-| Backstop | _pending deployment_ |
+| Backstop (verified source) | [`0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05`](https://explorer.testnet.arc.io/address/0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05) |
+
+Roles: owner `0x6D40a8B185B74574052c58Bb322618eE543a366b`, quote signer `0x87bCbF155ab2e4729D6eE7F2feff3a26600936C2`, resolver `0x91cD37e12d6dD26ac9c98af21d346DF9502C55b7`.
+Demo config: max payout 5 USDC per policy, max exposure 12 USDC per market, refund grace period 24 h, treasury seeded with 12 USDC (testnet faucet limits).
 
 ## Smart contract
 
@@ -60,8 +63,20 @@ cd contracts && forge test
 ```bash
 set -a; source .env; set +a
 cd contracts
-forge script script/Deploy.s.sol --rpc-url "$ARC_RPC_URL" --broadcast
+TREASURY_SEED_USDC=0 forge script script/Deploy.s.sol --rpc-url "$ARC_RPC_URL" --broadcast
+
+# seed the treasury with real-node calls (see note below)
+cast send $USDC_ADDRESS 'approve(address,uint256)' $BACKSTOP_ADDRESS 12000000 --private-key $PRIVATE_KEY_DEPLOYER --rpc-url $ARC_RPC_URL
+cast send $BACKSTOP_ADDRESS 'depositTreasury(uint256)' 12000000 --private-key $PRIVATE_KEY_DEPLOYER --rpc-url $ARC_RPC_URL
+
+# verify on the Arc explorer (Blockscout)
+forge verify-contract $BACKSTOP_ADDRESS src/Backstop.sol:Backstop --chain-id 5042002 \
+  --verifier blockscout --verifier-url https://explorer.testnet.arc.io/api/ \
+  --constructor-args $(cast abi-encode "constructor(address,address,address,uint256,uint256,uint64)" \
+  $USDC_ADDRESS <signer> <resolver> 5000000 12000000 86400)
 ```
+
+> **Arc note:** Arc's USDC ERC-20 is backed by the native gas balance through a system precompile. Forge's local script simulation can't execute USDC calls (it fails with `StackUnderflow`), so token transfers in setup scripts go through `cast send`, which runs on the real node. Contract deployment through `forge script` works normally.
 
 ## How Backstop uses Arc
 
