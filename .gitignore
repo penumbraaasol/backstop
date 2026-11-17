@@ -10,3 +10,5 @@ web/.next/
 dist/
 .DS_Store
 contracts/broadcast/**/dry-run/
+*.tsbuildinfo
+next-env.d.ts

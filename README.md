@@ -11,7 +11,7 @@ _Work in progress. This README is updated as each milestone lands._
 ```
 contracts/   Foundry project: Backstop.sol + tests + deploy script
 backend/     Node/TypeScript service: Gemini client, quote signer, hedger, resolver (M2)
-web/         Next.js app (M4)
+web/         Next.js app: market picker, live premium, buy flow, policy timeline
 ```
 
 ## Deployed contracts (Arc testnet, chain ID 5042002)
@@ -155,3 +155,20 @@ corepack pnpm e2e --outcome auto --payout 2           # full loop against Arc te
 ```
 
 The e2e script picks the next priced BTC 5-minute market, gets a signed quote, approves USDC, calls `buyPolicy`, then follows the policy through hedge → Gemini resolution → onchain payout or expiry.
+
+## Web app
+
+`web/` is Next.js 16 (App Router) with wagmi 3, viem and Tailwind 4. It is a single page:
+
+- **Get cover**: live Gemini markets grouped by horizon (5 min, 15 min, hourly, daily+) and asset. Tap YES or NO, choose a payout, and the ticket shows the premium live as `N × (p + s)`, with the hedge cost and protocol margin.
+- **Buy flow**: one click runs signed quote → USDC approve (only if needed) → `buyPolicy`, with a visible step for each and the 60 s quote validity.
+- **My cover**: every policy for the connected wallet with a four-step timeline (purchased → hedged on Gemini → resolved → paid out / expired / refunded), each linked to its Arc transaction.
+- **How it works**: pricing, hedging, the worked example, and the buyer protections.
+
+Wallets: any injected wallet (MetaMask, Rabby). The app offers to add and switch to Arc Testnet. Test USDC comes from [faucet.circle.com](https://faucet.circle.com).
+
+```bash
+cd web
+cp .env.example .env.local      # NEXT_PUBLIC_BACKSTOP_API, default http://localhost:8787
+corepack pnpm dev               # http://localhost:3000
+```
