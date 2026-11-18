@@ -124,7 +124,7 @@ function Intro({ marketCount }: { marketCount?: number }) {
   return (
     <div className="grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-end">
       <div>
-        <h1 className="font-display text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.045em] text-balance sm:text-2xl">
+        <h1 className="font-hero text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.045em] text-balance sm:text-2xl">
           Hedge a real-world event in one click.
         </h1>
         <p className="mt-5 max-w-xl text-md text-fg-2">
