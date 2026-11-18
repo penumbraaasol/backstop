@@ -107,3 +107,47 @@ export function contractExpiry(event: GeminiEvent, contract: GeminiContract): Da
   const s = contract.expiryDate ?? event.expiryDate;
   return s ? new Date(s) : undefined;
 }
+
+// --- spot prices (Gemini exchange public ticker), used to value the agent's hypothetical holdings ---
+const spotCache = new Map<string, { at: number; price: number }>();
+
+/** Mid price in USD for BTC, ETH, SOL, XRP… from Gemini's public ticker. Cached for 15 s. */
+export async function getSpot(asset: string): Promise<number | undefined> {
+  const key = asset.toLowerCase();
+  const hit = spotCache.get(key);
+  if (hit && Date.now() - hit.at < 15_000) return hit.price;
+  try {
+    const t = await getJson<{ bid?: string; ask?: string; last?: string }>(`/v1/pubticker/${key}usd`);
+    const bid = Number(t.bid);
+    const ask = Number(t.ask);
+    const price = bid > 0 && ask > 0 ? (bid + ask) / 2 : Number(t.last);
+    if (!(price > 0)) return hit?.price;
+    spotCache.set(key, { at: Date.now(), price });
+    return price;
+  } catch {
+    return hit?.price;
+  }
+}
+
+// --- hedge venue prices --------------------------------------------------------------------------
+// Quotes are priced from production, but the hedge order goes to the venue for HEDGE_MODE: the
+// sandbox has its own order books. Selling cover we can't hedge only ends in a refund, so callers
+// check the venue's ask first.
+const venueCache = new Map<string, { at: number; event: GeminiEvent }>();
+
+export async function venueAsk(instrumentSymbol: string, outcome: "yes" | "no", eventTicker?: string): Promise<number | undefined> {
+  if (cfg.HEDGE_MODE === "simulated") return undefined; // simulated hedges fill at the production ask
+  const base = cfg.HEDGE_MODE === "sandbox" ? "https://api.sandbox.gemini.com" : cfg.GEMINI_PUBLIC_URL;
+  const ticker = eventTicker ?? eventTickerGuess(instrumentSymbol);
+  if (!ticker) return undefined;
+  const key = `${base}|${ticker}`;
+  let hit = venueCache.get(key);
+  if (!hit || Date.now() - hit.at > 10_000) {
+    const res = await fetch(`${base}/v1/prediction-markets/events/${encodeURIComponent(ticker)}`, { signal: AbortSignal.timeout(8_000) });
+    if (!res.ok) return undefined;
+    hit = { at: Date.now(), event: (await res.json()) as GeminiEvent };
+    venueCache.set(key, hit);
+  }
+  const c = hit.event.contracts?.find((x) => x.instrumentSymbol === instrumentSymbol);
+  return c ? askFor(c, outcome) : undefined;
+}

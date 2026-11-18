@@ -14,7 +14,7 @@ import {
   type OutcomeName,
 } from "./chain.js";
 import { db, now } from "./db.js";
-import { askFor, contractExpiry, getContract, isTradable } from "./gemini/public.js";
+import { askFor, contractExpiry, getContract, isTradable, venueAsk } from "./gemini/public.js";
 
 export class QuoteError extends Error {
   constructor(
@@ -53,6 +53,16 @@ export async function makeQuote(req: QuoteRequest) {
   }
   const p = askFor(contract, req.outcome);
   if (p == null) throw new QuoteError(`no ask for ${req.outcome.toUpperCase()} on Gemini`, "no_liquidity");
+
+  // only sell cover we can hedge: the venue's ask must be within MAX_SLIPPAGE of the quoted price
+  const venue = await venueAsk(contract.instrumentSymbol, req.outcome, event.ticker).catch(() => undefined);
+  if (cfg.HEDGE_MODE !== "simulated" && (venue === undefined || venue > p + cfg.MAX_SLIPPAGE)) {
+    throw new QuoteError(
+      `This side can't be hedged right now: the Gemini ${cfg.HEDGE_MODE} book asks ${venue?.toFixed(2) ?? "nothing"} vs ${p.toFixed(2)} quoted. Try another market.`,
+      "unhedgeable",
+      409,
+    );
+  }
 
   // 2. Pricing: premium = N * (p + s). Integer math in USDC base units (6 decimals).
   const pMicro = toMicro(p);

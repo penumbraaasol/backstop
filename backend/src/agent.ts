@@ -80,8 +80,12 @@ const startOfUtcDay = () => {
 };
 
 export function spentToday(): bigint {
+  // refunded policies returned their premium, so they don't count against the budget
   const rows = db
-    .prepare("SELECT premium FROM agent_actions WHERE status = 'bought' AND at >= ?")
+    .prepare(
+      `SELECT a.premium FROM agent_actions a LEFT JOIN policies p ON p.policy_id = a.policy_id
+       WHERE a.status = 'bought' AND a.at >= ? AND COALESCE(p.status, 'active') != 'refunded'`,
+    )
     .all(startOfUtcDay()) as { premium: string }[];
   return rows.reduce((s, r) => s + BigInt(r.premium), 0n);
 }

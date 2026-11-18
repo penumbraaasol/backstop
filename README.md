@@ -211,14 +211,14 @@ Covering YES buys YES contracts; covering NO buys NO contracts. All math is done
 | `assist.ts` | Optional cover assistant: Grok (xAI) turns a plain-English risk into a suggested market, side and payout |
 | `agent.ts` | Optional Grok agent: buys cover from its own testnet wallet through one guarded function (per-policy cap, daily budget, balance check, one at a time), runs standing watches, and keeps an activity log |
 | `chat.ts` | Chat with the agent: Grok calls tools (`screen_markets`, `agent_status`, `buy_cover`, `start_watch`, `stop_watch`, `recent_activity`); every call is returned as a visible step, and a reply that claims a purchase without a confirmed `buy_cover` call is sent back to Grok |
-| `autopilot.ts` | Grok autopilot: each screener finding (and every 5 min) goes to Grok with a plain-English mandate, the candidate markets (each labelled with which side is downside and upside cover) and the agent's open positions. Grok answers buy or hold with a short reason. The server rejects a pick on the wrong side, a market already held, or a price more than 2¢ above the one decided on, then buys through `buyCover` |
+| `autopilot.ts` | Grok autopilot, a portfolio-aware hedger. The agent holds a hypothetical portfolio (default 0.01 BTC, 0.3 ETH) valued at Gemini spot (`/v1/pubticker`). On each relevant finding (and every 5 min) the server builds the candidate hedges with the numbers that matter (strike vs spot, cost per $1, implied odds, a size matched to a 1% loss on the holding) and keeps only sound ones: downside cover, strike from −1.5% to +0.3% of spot, cost 0.12–0.60 per $1, at most 1.5× the suggested size, one policy per asset, and hedgeable on the Gemini venue within 2¢. Grok picks one or holds, citing those numbers; the server re-checks the pick before buying |
 | `jobs.ts` | The agent's background jobs every 30 s: market screener (price jumps, cheap tail cover, new windows), on-chain watcher (agent policies and treasury on Arc), and watches that buy when conditions match |
 
 API: `GET /markets`, `POST /quote`, `POST /assist`, `GET /agent`, `POST /agent/run`, `POST /agent/chat`, `GET /agent/activity`, `POST /agent/watches/:id/stop`, `GET /policies/:address`, `GET /policy/:id`, `GET /config`, `GET /stats`, `GET /health`.
 
 **Hedge modes.** Market data always comes from Gemini production.
 - `simulated` sends no order. It records a fill at the live production ask if that ask is within the limit price, and otherwise fails, which triggers the refund path. Set `SIMULATE_HEDGE_FAILURE=true` to force the refund path for a demo.
-- `sandbox` places real orders on `api.sandbox.gemini.com`.
+- `sandbox` places real orders on `api.sandbox.gemini.com`. Because the sandbox has its own order books, quotes are refused when the sandbox ask is more than `MAX_SLIPPAGE` above the quoted production ask ("only sell cover you can hedge").
 - `live` places real production orders, capped at `MAX_LIVE_CONTRACTS` (default 5).
 
 ### Gemini integration notes (verified this week)

@@ -146,6 +146,8 @@ export type AgentWatch = {
 export type Autopilot = {
   enabled: boolean;
   mandate: string;
+  holdings: { asset: string; amount: number; spot: number | null; valueUsd: number | null }[];
+  rules: { minDistance: number; maxDistance: number; minCost: number; maxCost: number; hedgeMove: number; maxSizeMultiple: number };
   lastDecisionAt: number | null;
   lastReviewAt: number | null;
   reviewEverySec: number;

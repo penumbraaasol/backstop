@@ -182,7 +182,22 @@ function AutopilotCard({ ap, now }: { ap: Autopilot; now: number }) {
           &ldquo;{ap.mandate}&rdquo; <span className="text-fg-3 underline underline-offset-2">edit</span>
         </button>
       )}
-      <p className="mt-2 text-[11px] text-fg-3">
+      <dl className="mt-3 grid grid-cols-2 gap-2">
+        {ap.holdings.map((h) => (
+          <div key={h.asset} className="rounded-xl bg-surface-2 px-3 py-2">
+            <dt className="text-[11px] text-fg-2">Holding</dt>
+            <dd className="num text-sm font-medium">
+              {h.amount} {h.asset}
+              {h.valueUsd !== null && <span className="text-fg-2"> · ${Math.round(h.valueUsd).toLocaleString("en-US")}</span>}
+            </dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-2 text-[11px] leading-relaxed text-fg-3">
+        Rules: downside cover only · strike {ap.rules.minDistance * 100}% to +{ap.rules.maxDistance * 100}% of spot · {ap.rules.minCost.toFixed(2)}–
+        {ap.rules.maxCost.toFixed(2)} per $1 · size ≈ loss on a {ap.rules.hedgeMove * 100}% drop · one policy per asset
+      </p>
+      <p className="mt-1.5 text-[11px] text-fg-3">
         {ap.enabled
           ? `Reviews every finding and at least every ${Math.round(ap.reviewEverySec / 60)} min · last decision ${ago(ap.lastDecisionAt, now)}`
           : "Off. Findings are logged, but Grok won't act on them."}

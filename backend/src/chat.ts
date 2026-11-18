@@ -105,7 +105,12 @@ const TOOLS = [
         type: "object",
         properties: {
           enabled: { type: "boolean" },
-          mandate: { type: "string", description: "What to protect, at what price, e.g. 'I hold ETH. Keep 3 USDC of downside cover on each 15-minute window while it costs under 0.50.'" },
+          mandate: { type: "string", description: "The hedging goal in plain English, e.g. 'Protect my ETH against short drops; hedge about a 1% move.'" },
+          holdings: {
+            type: "array",
+            description: "The portfolio to protect, e.g. [{asset:'BTC', amount:0.01}, {asset:'ETH', amount:0.3}]. Crypto assets with Gemini spot prices: BTC, ETH, SOL, XRP.",
+            items: { type: "object", properties: { asset: { type: "string" }, amount: { type: "number" } }, required: ["asset", "amount"] },
+          },
         },
       },
     },
@@ -272,13 +277,19 @@ async function runTool(name: string, rawArgs: string, steps: Step[], lastUserTex
         return { stopped: ok };
       }
       case "set_autopilot": {
-        const p = z.object({ enabled: z.boolean().optional(), mandate: z.string().min(10).max(400).optional() }).parse(args);
+        const p = z
+          .object({
+            enabled: z.boolean().optional(),
+            mandate: z.string().min(10).max(400).optional(),
+            holdings: z.array(z.object({ asset: z.string(), amount: z.coerce.number().positive() })).max(4).optional(),
+          })
+          .parse(args);
         const st = setAutopilot(p);
         steps.push({
           tool: name,
           ok: true,
-          label: `Autopilot ${st.enabled ? "on" : "off"}${p.mandate ? " · new mandate" : ""}`,
-          detail: p.mandate ? st.mandate : undefined,
+          label: `Autopilot ${st.enabled ? "on" : "off"}${p.mandate ? " · new mandate" : ""}${p.holdings ? " · new holdings" : ""}`,
+          detail: p.holdings ? p.holdings.map((h) => `${h.amount} ${h.asset.toUpperCase()}`).join(", ") : p.mandate ? st.mandate : undefined,
         });
         return st;
       }
