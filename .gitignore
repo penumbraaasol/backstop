@@ -12,3 +12,9 @@ dist/
 contracts/broadcast/**/dry-run/
 *.tsbuildinfo
 next-env.d.ts
+
+# written by next dev for AI coding tools; not part of the project
+web/AGENTS.md
+web/CLAUDE.md
+AGENTS.md
+CLAUDE.md

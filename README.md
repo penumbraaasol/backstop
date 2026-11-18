@@ -23,11 +23,9 @@ Grok is Backstop's hedging agent: it holds its own Arc testnet wallet and buys c
 ```
 contracts/   Foundry project: Backstop.sol + tests + deploy script
 docs/        Grok agent chat export
-backend/     Node/TypeScript service: Gemini client, quote signer, hedger, resolver (M2)
+backend/     Node/TypeScript service: Gemini client, quote signer, hedger, resolver, Grok agent
 web/         Next.js app: market picker, live premium, buy flow, policy timeline
 Dockerfile   Backend container (Railway or any Docker host)
-DEMO.md      Demo video script
-SUBMISSION.md  Answers to the submission questions
 ```
 
 ## Architecture
@@ -265,7 +263,7 @@ The e2e script picks the next priced BTC 5-minute market, gets a signed quote, a
 - **My cover**: every policy for the connected wallet with a four-step timeline (purchased → hedged on Gemini → resolved → paid out / expired / refunded), each linked to its Arc transaction.
 - **How it works**: pricing, hedging, the worked example, and the buyer protections.
 
-Design: a dark, professional trading-app look inspired by TradingView and modern fintech sites. Near-black background, white primary action, Geist and Geist Mono, hairline borders, green and red only for YES/NO and paid/failed states, and no gradients or glows. The premium is laid out as a receipt and each policy as a tracking log. All design tokens live in `web/src/app/globals.css`. In `pnpm dev`, `/preview` renders every UI state (empty, loading, pending, issued, error, hedging, paid out, expired, refunded) from fixed data for design review. It returns 404 in production builds.
+Design: a dark trading-app interface (Schibsted Grotesk and Geist Mono, hairline borders, green and red only for YES/NO and paid/failed states). All design tokens live in `web/src/app/globals.css`.
 
 Wallets: any injected wallet (MetaMask, Rabby). The app offers to add and switch to Arc Testnet. Test USDC comes from [faucet.circle.com](https://faucet.circle.com).
 

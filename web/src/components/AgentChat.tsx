@@ -34,7 +34,7 @@ export function AgentChat({ seed }: { seed?: ChatMessage[] } = {}) {
 
   useEffect(() => setMessages(seed ?? load()), [seed]);
   useEffect(() => {
-    if (seed) return; // preview data is never saved
+    if (seed) return; // a seeded conversation is never saved
     try {
       localStorage.setItem(STORE, JSON.stringify(messages.slice(-30)));
     } catch {
