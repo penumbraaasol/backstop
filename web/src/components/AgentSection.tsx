@@ -46,9 +46,7 @@ export function AgentSection() {
           <Eyebrow>Grok Bot</Eyebrow>
           <h1 className="mt-3 text-xl font-semibold tracking-[-0.03em]">An AI hedger with its own wallet</h1>
           <p className="mt-2 text-sm text-fg-2">
-            Grok screens every live market and the chain every 30 seconds. On autopilot it reviews each finding against
-            your mandate and decides to buy or hold, with a short reason for every decision. Purchases are signed by its
-            own wallet on Arc, with no human approval, inside limits the server enforces.
+            Watches the markets around the clock and buys cover on its own.
           </p>
           {a.sampleMarkets && (
             <p className="mt-3 text-xs text-warn">Development mode: the screener is reading sample markets because Gemini is unavailable.</p>

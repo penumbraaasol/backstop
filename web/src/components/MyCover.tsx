@@ -44,8 +44,7 @@ export function MyCover() {
           <Eyebrow>My cover</Eyebrow>
           <h1 className="mt-3 font-display text-xl font-semibold tracking-[-0.03em]">Cover you&apos;ve bought</h1>
           <p className="mt-2 max-w-xl text-sm text-fg-2">
-            Every policy bought from this wallet, tracked from purchase until it pays out or is refunded. Each step links to
-            its transaction on Arc or its order on Gemini.
+            Tracked from purchase to payout.
           </p>
         </div>
         {policies && policies.length > 0 && <Totals policies={policies} />}

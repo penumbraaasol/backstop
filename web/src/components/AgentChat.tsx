@@ -82,8 +82,7 @@ export function AgentChat({ seed }: { seed?: ChatMessage[] } = {}) {
       <div className="flex items-center justify-between border-b border-line px-5 py-3">
         <p className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <GrokMark className="size-5 text-fg" />
-          Grok
-          <span className="font-normal text-fg-3">hedging agent</span>
+          Grok Bot
         </p>
         {!empty && (
           <button
