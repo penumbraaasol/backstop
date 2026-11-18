@@ -235,7 +235,7 @@ const KIND: Record<AgentEvent["kind"], { label: string; cls: string }> = {
 
 function Feed({ events, now }: { events: AgentEvent[]; now: number }) {
   return (
-    <div className="flex max-h-[420px] min-h-[240px] flex-col rounded-[22px] border border-line bg-surface">
+    <div className="flex h-[220px] flex-col rounded-[22px] border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-5 py-3">
         <p className="text-sm font-semibold tracking-tight">Activity</p>
         <p className="flex items-center gap-1.5 text-[11px] text-fg-3">
