@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Schibsted_Grotesk } from "next/font/google";
+import { Fragment_Mono, Geist, Schibsted_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Footer } from "@/components/Footer";
 import { Nav } from "@/components/Nav";
@@ -7,7 +7,7 @@ import { Providers } from "./providers";
 
 const sans = Schibsted_Grotesk({ subsets: ["latin"], variable: "--font-sans-face" });
 const hero = Geist({ subsets: ["latin"], variable: "--font-geist" });
-const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+const mono = Fragment_Mono({ subsets: ["latin"], weight: "400", variable: "--font-geist-mono" });
 
 export const metadata: Metadata = {
   title: { default: "Backstop | Event cover in USDC", template: "%s | Backstop" },
