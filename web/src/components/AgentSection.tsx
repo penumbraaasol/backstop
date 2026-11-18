@@ -18,7 +18,7 @@ export function AgentSection() {
   if (conf && !conf.agent)
     return (
       <section className="mx-auto max-w-[1240px] px-5 py-20 sm:px-8">
-        <Eyebrow>Grok agent</Eyebrow>
+        <Eyebrow>Grok Bot</Eyebrow>
         <h1 className="mt-3 text-xl font-semibold tracking-[-0.03em]">The agent is switched off on this server.</h1>
         <p className="mt-2 max-w-md text-sm text-fg-2">Set GROK_API_KEY, PRIVATE_KEY_AGENT and AGENT_ENABLED=true on the backend to turn it on.</p>
       </section>
@@ -43,7 +43,7 @@ export function AgentSection() {
     <section className="mx-auto max-w-[1240px] px-5 pb-20 pt-12 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-8">
         <div className="max-w-xl">
-          <Eyebrow>Grok agent</Eyebrow>
+          <Eyebrow>Grok Bot</Eyebrow>
           <h1 className="mt-3 text-xl font-semibold tracking-[-0.03em]">An AI hedger with its own wallet</h1>
           <p className="mt-2 text-sm text-fg-2">
             Grok screens every live market and the chain every 30 seconds. On autopilot it reviews each finding against

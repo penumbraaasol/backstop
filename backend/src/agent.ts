@@ -1,4 +1,4 @@
-// Grok agent: buys cover on Arc from its own testnet wallet, with no human signature.
+// Grok Bot: buys cover on Arc from its own testnet wallet, with no human signature.
 // Every path (button, chat, standing watches) goes through buyCover(), which enforces the limits
 // and logs the decision. Grok chooses; the backend checks and executes.
 import { createWalletClient, erc20Abi, http, parseEventLogs, type Address, type Hex } from "viem";
@@ -176,7 +176,7 @@ export function buyCover(
   meta: { instruction: string; summary: string; reasoning: string; source: Source },
 ): Promise<BuyResult> {
   return serial(async () => {
-    if (!agentEnabled() || !account || !wallet) throw new QuoteError("The Grok agent is switched off on this server.", "agent_off", 503);
+    if (!agentEnabled() || !account || !wallet) throw new QuoteError("The Grok Bot is switched off on this server.", "agent_off", 503);
     const payout = Math.max(1, Math.min(Math.round(pick.payout), cfg.AGENT_MAX_PAYOUT));
     const base = { ...meta, instrument_symbol: pick.market.instrumentSymbol, outcome: pick.outcome, payout };
     const fail = (status: "blocked" | "failed", error: string, premium: bigint | null = null) => {
@@ -263,7 +263,7 @@ export function buyCover(
 
 /** "Let Grok buy it": one instruction, Grok picks, the agent buys. */
 export async function runAgent(instruction: string) {
-  if (!agentEnabled()) throw new QuoteError("The Grok agent is switched off on this server.", "agent_off", 503);
+  if (!agentEnabled()) throw new QuoteError("The Grok Bot is switched off on this server.", "agent_off", 503);
   const s = await suggestCover(instruction);
   const meta = { instruction, summary: s.summary, reasoning: s.reasoning, source: "button" as const };
   if (!s.instrumentSymbol || !s.outcome || !s.market) {

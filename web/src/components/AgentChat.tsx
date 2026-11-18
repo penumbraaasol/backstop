@@ -24,7 +24,7 @@ const load = (): ChatMessage[] => {
   }
 };
 
-/** A chat with the Grok agent. Tool calls show as steps; purchases link to Arc. */
+/** A chat with the Grok Bot. Tool calls show as steps; purchases link to Arc. */
 export function AgentChat({ seed }: { seed?: ChatMessage[] } = {}) {
   const qc = useQueryClient();
   const [messages, setMessages] = useState<ChatMessage[]>([]);

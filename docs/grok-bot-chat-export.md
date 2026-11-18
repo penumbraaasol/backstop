@@ -1,6 +1,6 @@
-# Grok agent chat export
+# Grok Bot chat export
 
-Exported 2026-11-18 18:52 UTC from Backstop's Grok agent (`POST /agent/chat`, model `grok-4.20-0309-non-reasoning`). Tool calls are listed under each reply, as the app shows them. Purchases are real Arc testnet transactions from the agent's own wallet.
+Exported 2026-11-18 18:52 UTC from Backstop's Grok Bot (`POST /agent/chat`, model `grok-4.20-0309-non-reasoning`). Tool calls are listed under each reply, as the app shows them. Purchases are real Arc testnet transactions from the agent's own wallet.
 
 **You:** What do you hold, what are you watching right now, and what have you bought so far?
 

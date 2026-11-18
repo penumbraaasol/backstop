@@ -1,4 +1,4 @@
-// Chat with the Grok agent. Grok can call tools: screen live markets, read its on-chain status,
+// Chat with the Grok Bot. Grok can call tools: screen live markets, read its on-chain status,
 // buy cover from its own wallet, and start or stop standing watches. Every tool call is returned
 // as a visible step, and purchases go through buyCover() with the same limits as everywhere else.
 import { z } from "zod";
@@ -326,7 +326,7 @@ export const chatBody = z.object({
 const NO_BUY = /\b(don'?t|do not|dont|no|without)\s+(buy|buying|purchas\w*)\b|\bjust (explain|tell|show|asking)\b|\bnot yet\b|\bhypothetical(ly)?\b/i;
 
 export async function chat(history: z.infer<typeof chatBody>["messages"]) {
-  if (!agentEnabled()) throw new QuoteError("The Grok agent is switched off on this server.", "agent_off", 503);
+  if (!agentEnabled()) throw new QuoteError("The Grok Bot is switched off on this server.", "agent_off", 503);
   const lastUserText = [...history].reverse().find((m) => m.role === "user")?.content.slice(0, 300) ?? "";
   const messages: Msg[] = [{ role: "system", content: system() }, ...history.slice(-12)];
   const steps: Step[] = [];

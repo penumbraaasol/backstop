@@ -36,7 +36,7 @@ export type BackendConfig = {
   resolver: `0x${string}`;
   hedgeMode: "simulated" | "sandbox" | "live";
   assistant?: boolean;
-  /** agent wallet address when the Grok agent is switched on */
+  /** agent wallet address when the Grok Bot is switched on */
   agent?: `0x${string}` | null;
   spread: number;
   maxSlippage: number;

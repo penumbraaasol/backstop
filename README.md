@@ -18,18 +18,18 @@
 | **Priced by** | Gemini Prediction Markets live order book: premium = N × (p + s). |
 | **Backed by** | A matching Gemini position bought for every policy. The prediction market is the oracle *and* the reinsurer. |
 | **Settled on** | Arc, Circle's L1 where USDC is the gas token and the settlement asset. |
-| **Run by** | A Grok agent with its own wallet that screens the markets and buys cover on its own, within hard limits. |
+| **Run by** | A Grok Bot with its own wallet that screens the markets and buys cover on its own, within hard limits. |
 
 ## Grok's role
 
-Grok is Backstop's hedging agent: it holds its own Arc testnet wallet and buys cover with no human signature. In the chat ("protect my ETH against a drop in the next hour") it screens the live Gemini markets with tools, explains its pick and buys the policy onchain. On autopilot it reviews every screener finding against a valued portfolio and decides to buy or hold, with a short, numbers-based reason for each decision that is shown in the app's activity feed. The server enforces its limits and re-checks every pick, so Grok decides but can't exceed the per-policy cap, the daily budget or the hedge rules. A chat export is in [`docs/grok-agent-chat-export.md`](docs/grok-agent-chat-export.md).
+Grok is Backstop's hedging agent: it holds its own Arc testnet wallet and buys cover with no human signature. In the chat ("protect my ETH against a drop in the next hour") it screens the live Gemini markets with tools, explains its pick and buys the policy onchain. On autopilot it reviews every screener finding against a valued portfolio and decides to buy or hold, with a short, numbers-based reason for each decision that is shown in the app's activity feed. The server enforces its limits and re-checks every pick, so Grok decides but can't exceed the per-policy cap, the daily budget or the hedge rules. A chat export is in [`docs/grok-bot-chat-export.md`](docs/grok-bot-chat-export.md).
 
 ## Repo layout
 
 ```
 contracts/   Foundry project: Backstop.sol + tests + deploy script
-docs/        Grok agent chat export
-backend/     Node/TypeScript service: Gemini client, quote signer, hedger, resolver, Grok agent
+docs/        Grok Bot chat export
+backend/     Node/TypeScript service: Gemini client, quote signer, hedger, resolver, Grok Bot
 web/         Next.js app: market picker, live premium, buy flow, policy timeline
 Dockerfile   Backend container (Railway or any Docker host)
 ```
@@ -51,7 +51,7 @@ flowchart LR
     B -->|"7. resolveMarket + settle"| C
     C -->|"8. N USDC payout"| U
     B <-->|"findings, decisions"| X[("Grok<br/>xAI API")]
-    B -->|"agent buys from its own wallet"| AG(["Grok agent wallet"])
+    B -->|"agent buys from its own wallet"| AG(["Grok Bot wallet"])
     AG -->|"buyPolicy"| C
 ```
 
@@ -95,7 +95,7 @@ Components:
 | USDC (ERC-20, 6 decimals, official Circle) | [`0x3600000000000000000000000000000000000000`](https://explorer.testnet.arc.io/address/0x3600000000000000000000000000000000000000) |
 | Backstop (verified source) | [`0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05`](https://explorer.testnet.arc.io/address/0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05) |
 
-Roles: owner `0x6D40a8B185B74574052c58Bb322618eE543a366b`, quote signer `0x87bCbF155ab2e4729D6eE7F2feff3a26600936C2`, resolver `0x91cD37e12d6dD26ac9c98af21d346DF9502C55b7`, Grok agent wallet [`0x4B0dE4147948fE97a1b53086F15C919348344F78`](https://explorer.testnet.arc.io/address/0x4B0dE4147948fE97a1b53086F15C919348344F78).
+Roles: owner `0x6D40a8B185B74574052c58Bb322618eE543a366b`, quote signer `0x87bCbF155ab2e4729D6eE7F2feff3a26600936C2`, resolver `0x91cD37e12d6dD26ac9c98af21d346DF9502C55b7`, Grok Bot wallet [`0x4B0dE4147948fE97a1b53086F15C919348344F78`](https://explorer.testnet.arc.io/address/0x4B0dE4147948fE97a1b53086F15C919348344F78).
 Demo config: max payout 20 USDC per policy, max exposure 50 USDC per market, refund grace period 24 h. Treasury seeded with 12 USDC, topped up to about 95 USDC free liquidity on Nov 18 ([deposit tx](https://explorer.testnet.arc.io/tx/0xbcc5d985167dd9b9d7c78e0b76f14aea0dd56a7ae639e2be2930e291f1d5b16b), [caps tx](https://explorer.testnet.arc.io/tx/0xb159d532218c02a16bc2a4feeb68d59b847d3f129a9e1aa389faf0c467870314)).
 
 ## Verified on Arc testnet
@@ -109,7 +109,7 @@ Every path has run end to end against the deployed contract:
 | #3 | **real Gemini sandbox order**: 2 YES filled at 0.43 on `GEMI-BTC2611170400-HI64400` | **paid out 2 USDC** | [`0x69f4…2af4b`](https://explorer.testnet.arc.io/tx/0x69f46ec1a9340f796aef8d6e5b3ed2cea0cc17547eee94e22c731f3a585af2b4) |
 | #4 | real Gemini sandbox fill-or-kill order, not filled (sandbox ask 0.97 > limit 0.12) | **premium refunded** | [`0xa571…e32c`](https://explorer.testnet.arc.io/tx/0xa571ad0977a4543ecb0169fadac198bf502328b72b0280ac25aac2884b3ce32c) |
 
-The Grok agent, buying from its own wallet:
+The Grok Bot, buying from its own wallet:
 
 | Policy | How | Hedge | Transaction |
 |---|---|---|---|
@@ -228,7 +228,7 @@ Covering YES buys YES contracts; covering NO buys NO contracts. All math is done
 | `hedger.ts` | Buys N contracts of the covered outcome for each new policy; on failure calls `cancelAndRefund` |
 | `resolver.ts` | Polls Gemini for `resolutionSide` after expiry, then calls `resolveMarket` and `settle` |
 | `assist.ts` | Optional cover assistant: Grok (xAI) turns a plain-English risk into a suggested market, side and payout |
-| `agent.ts` | Optional Grok agent: buys cover from its own testnet wallet through one guarded function (per-policy cap, daily budget, balance check, one at a time), runs standing watches, and keeps an activity log |
+| `agent.ts` | Optional Grok Bot: buys cover from its own testnet wallet through one guarded function (per-policy cap, daily budget, balance check, one at a time), runs standing watches, and keeps an activity log |
 | `chat.ts` | Chat with the agent: Grok calls tools (`screen_markets`, `agent_status`, `buy_cover`, `start_watch`, `stop_watch`, `recent_activity`); every call is returned as a visible step, and a reply that claims a purchase without a confirmed `buy_cover` call is sent back to Grok |
 | `autopilot.ts` | Grok autopilot, a portfolio-aware hedger. The agent holds a hypothetical portfolio (default 0.01 BTC, 0.3 ETH) valued at Gemini spot (`/v1/pubticker`). On each relevant finding (and every 5 min) the server builds the candidate hedges with the numbers that matter (strike vs spot, cost per $1, implied odds, a size matched to a 1% loss on the holding) and keeps only sound ones: downside cover, strike from −1.5% to +0.3% of spot, cost 0.12–0.60 per $1, at most 1.5× the suggested size, one policy per asset, and hedgeable on the Gemini venue within 2¢. Grok picks one or holds, citing those numbers; the server re-checks the pick before buying |
 | `jobs.ts` | The agent's background jobs every 30 s: market screener (price jumps, cheap tail cover, new windows), on-chain watcher (agent policies and treasury on Arc), and watches that buy when conditions match |
@@ -261,11 +261,11 @@ The e2e script picks the next priced BTC 5-minute market, gets a signed quote, a
 
 ## Web app
 
-`web/` is Next.js 16 (App Router) with wagmi 3, viem and Tailwind 4. Pages: `/` buy cover (markets, cover panel, wallet), `/agent` the Grok agent (chat, running jobs, activity), `/cover` your policies, `/how` how it works.
+`web/` is Next.js 16 (App Router) with wagmi 3, viem and Tailwind 4. Pages: `/` buy cover (markets, cover panel, wallet), `/agent` the Grok Bot (chat, running jobs, activity), `/cover` your policies, `/how` how it works.
 
 - **Ask Grok**: describe a risk in plain English ("I hold BTC and I'm worried it drops in the next hour"). Grok picks the market, side and payout that offset it and fills in the cover panel. It only suggests: the buyer reviews and signs the purchase. The backend checks every suggestion against the live market list and the payout limits, and rate-limits requests. Set `GROK_API_KEY` to enable it; `pnpm assist:check` tests it against sample markets.
-- **Grok agent section**: a chat styled after the Grok app. Tell it what you hold or fear and it screens the markets and buys cover from its own wallet, or starts a standing watch ("keep me covered on every 15-minute window while it's under 0.55"). Next to the chat, the running jobs (market screener, on-chain watcher, watches) and a live activity feed show what it found and did, with Arc transaction links. `MOCK_MARKETS=true` serves sample markets for local development when Gemini is down; it refuses to run in production, and purchases still need real Gemini prices.
-- **Grok agent (one click)**: "Let Grok buy it" has the agent act on the request by itself. Grok chooses the policy, then the backend buys it on Arc from the agent's own testnet wallet (`PRIVATE_KEY_AGENT`) with no human signature. Limits: `AGENT_MAX_PAYOUT` per policy, `AGENT_DAILY_BUDGET_USDC` per UTC day, a balance check, one purchase at a time, and an on/off switch (`AGENT_ENABLED`). Every decision, including declines and blocked purchases, is logged with Grok's reasoning and shown on the page with the agent's policies tracked to settlement.
+- **Grok Bot section**: a chat styled after the Grok app. Tell it what you hold or fear and it screens the markets and buys cover from its own wallet, or starts a standing watch ("keep me covered on every 15-minute window while it's under 0.55"). Next to the chat, the running jobs (market screener, on-chain watcher, watches) and a live activity feed show what it found and did, with Arc transaction links. `MOCK_MARKETS=true` serves sample markets for local development when Gemini is down; it refuses to run in production, and purchases still need real Gemini prices.
+- **Grok Bot (one click)**: "Let Grok buy it" has the agent act on the request by itself. Grok chooses the policy, then the backend buys it on Arc from the agent's own testnet wallet (`PRIVATE_KEY_AGENT`) with no human signature. Limits: `AGENT_MAX_PAYOUT` per policy, `AGENT_DAILY_BUDGET_USDC` per UTC day, a balance check, one purchase at a time, and an on/off switch (`AGENT_ENABLED`). Every decision, including declines and blocked purchases, is logged with Grok's reasoning and shown on the page with the agent's policies tracked to settlement.
 - **Get cover**: live Gemini markets grouped by horizon (5 min, 15 min, hourly, daily+) and asset. Tap YES or NO, choose a payout, and the ticket shows the premium live as `N × (p + s)`, with the hedge cost and protocol margin.
 - **Buy flow**: one click runs signed quote → USDC approve (only if needed) → `buyPolicy`, with a visible step for each and the 60 s quote validity.
 - **My cover**: every policy for the connected wallet with a four-step timeline (purchased → hedged on Gemini → resolved → paid out / expired / refunded), each linked to its Arc transaction.
@@ -281,7 +281,7 @@ cp .env.example .env.local      # NEXT_PUBLIC_BACKSTOP_API, default http://local
 corepack pnpm dev               # http://localhost:3000
 ```
 
-## Grok agent: decision loop and safety limits
+## Grok Bot: decision loop and safety limits
 
 **Decision loop** (every 30 s, `backend/src/jobs.ts` → `autopilot.ts`):
 1. **Screen.** Read ~170 live Gemini markets; flag price moves ≥ 8¢, cheap cover (0.05–0.15) and new windows. Watch the agent's policies and the treasury on Arc.

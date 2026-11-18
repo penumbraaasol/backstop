@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS markets (
   resolved_at      INTEGER
 );
 
--- every decision the Grok agent made, including the ones where it chose not to buy
+-- every decision the Grok Bot made, including the ones where it chose not to buy
 CREATE TABLE IF NOT EXISTS agent_actions (
   id                INTEGER PRIMARY KEY AUTOINCREMENT,
   at                INTEGER NOT NULL,

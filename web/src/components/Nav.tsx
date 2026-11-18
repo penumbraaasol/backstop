@@ -8,7 +8,7 @@ import { cx, Mark, Wordmark } from "./ui";
 
 const LINKS = [
   { href: "/", label: "Buy cover" },
-  { href: "/agent", label: "Grok agent" },
+  { href: "/agent", label: "Grok Bot" },
   { href: "/cover", label: "My cover" },
   { href: "/how", label: "How it works" },
 ];
