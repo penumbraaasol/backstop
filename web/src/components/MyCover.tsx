@@ -37,11 +37,11 @@ export function MyCover() {
   const { data: policies, isLoading } = usePolicies(address);
 
   return (
-    <section id="policies" className="mx-auto max-w-[1240px] px-5 py-20 sm:px-8">
+    <section className="mx-auto max-w-[1240px] px-5 pb-20 pt-12 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <Eyebrow>My cover</Eyebrow>
-          <h2 className="mt-3 font-display text-xl font-semibold tracking-[-0.03em]">Cover you&apos;ve bought</h2>
+          <h1 className="mt-3 font-display text-xl font-semibold tracking-[-0.03em]">Cover you&apos;ve bought</h1>
           <p className="mt-2 max-w-xl text-sm text-fg-2">
             Every policy bought from this wallet, tracked from purchase until it pays out or is refunded. Each step links to
             its transaction on Arc or its order on Gemini.

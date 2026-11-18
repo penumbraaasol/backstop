@@ -29,13 +29,13 @@ const PROTECTIONS = [
 
 export function HowItWorks() {
   return (
-    <section id="how" className="border-y border-line bg-surface/60">
-      <div className="mx-auto grid max-w-[1240px] gap-x-16 gap-y-14 px-5 py-20 sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+    <section>
+      <div className="mx-auto grid max-w-[1240px] gap-x-16 gap-y-14 px-5 pb-20 pt-12 sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <div>
           <Eyebrow>How it works</Eyebrow>
-          <h2 className="mt-3 max-w-lg font-display text-xl font-semibold tracking-[-0.03em]">
+          <h1 className="mt-3 max-w-lg font-display text-xl font-semibold tracking-[-0.03em]">
             The prediction market sets the price and carries the risk.
-          </h2>
+          </h1>
           <ol className="mt-10">
             {STEPS.map((s, i) => (
               <li key={s.title} className="grid grid-cols-[2.5rem_1fr] border-t border-line py-5">

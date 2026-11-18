@@ -241,7 +241,7 @@ The e2e script picks the next priced BTC 5-minute market, gets a signed quote, a
 
 ## Web app
 
-`web/` is Next.js 16 (App Router) with wagmi 3, viem and Tailwind 4. It is a single page:
+`web/` is Next.js 16 (App Router) with wagmi 3, viem and Tailwind 4. Pages: `/` buy cover (markets, cover panel, wallet), `/agent` the Grok agent (chat, running jobs, activity), `/cover` your policies, `/how` how it works.
 
 - **Ask Grok**: describe a risk in plain English ("I hold BTC and I'm worried it drops in the next hour"). Grok picks the market, side and payout that offset it and fills in the cover panel. It only suggests: the buyer reviews and signs the purchase. The backend checks every suggestion against the live market list and the payout limits, and rate-limits requests. Set `GROK_API_KEY` to enable it; `pnpm assist:check` tests it against sample markets.
 - **Grok agent section**: a chat styled after the Grok app. Tell it what you hold or fear and it screens the markets and buys cover from its own wallet, or starts a standing watch ("keep me covered on every 15-minute window while it's under 0.55"). Next to the chat, the running jobs (market screener, on-chain watcher, watches) and a live activity feed show what it found and did, with Arc transaction links. `MOCK_MARKETS=true` serves sample markets for local development when Gemini is down; it refuses to run in production, and purchases still need real Gemini prices.

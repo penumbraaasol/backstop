@@ -15,17 +15,34 @@ export function AgentSection() {
   const { data: conf } = useBackendConfig();
   const { data: a } = useQuery({ queryKey: ["agent"], queryFn: api.agent, enabled: !!conf?.agent, refetchInterval: 5_000 });
   const { data: policies } = usePolicies(a?.address ?? undefined);
-  if (!conf?.agent || !a) return null;
+  if (conf && !conf.agent)
+    return (
+      <section className="mx-auto max-w-[1240px] px-5 py-20 sm:px-8">
+        <Eyebrow>Grok agent</Eyebrow>
+        <h1 className="mt-3 text-xl font-semibold tracking-[-0.03em]">The agent is switched off on this server.</h1>
+        <p className="mt-2 max-w-md text-sm text-fg-2">Set GROK_API_KEY, PRIVATE_KEY_AGENT and AGENT_ENABLED=true on the backend to turn it on.</p>
+      </section>
+    );
+  if (!a)
+    return (
+      <section className="mx-auto max-w-[1240px] px-5 py-20 sm:px-8">
+        <div className="placeholder h-24 max-w-xl" />
+        <div className="mt-10 grid gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(0,1fr)]">
+          <div className="placeholder h-[640px] rounded-[22px]" />
+          <div className="placeholder h-[640px] rounded-[22px]" />
+        </div>
+      </section>
+    );
 
   const spent = Number(a.spentTodayUsdc);
   const budget = Number(a.dailyBudgetUsdc);
 
   return (
-    <section id="agent" className="mx-auto max-w-[1240px] px-5 py-20 sm:px-8">
+    <section className="mx-auto max-w-[1240px] px-5 pb-20 pt-12 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-8">
         <div className="max-w-xl">
           <Eyebrow>Grok agent</Eyebrow>
-          <h2 className="mt-3 text-xl font-semibold tracking-[-0.03em]">An AI hedger with its own wallet</h2>
+          <h1 className="mt-3 text-xl font-semibold tracking-[-0.03em]">An AI hedger with its own wallet</h1>
           <p className="mt-2 text-sm text-fg-2">
             Grok screens the live markets and the chain on a loop, and buys cover on Arc when you ask it to or when one of
             its watches finds a match. No human signs its purchases. The server enforces its limits.

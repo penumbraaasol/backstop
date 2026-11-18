@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Minus, Plus } from "lucide-react";
+import Link from "next/link";
 import type { ReactNode } from "react";
 import type { Market, Outcome } from "@/lib/api";
 import { FAUCET_URL, txUrl } from "@/lib/chain";
@@ -337,9 +338,9 @@ function Issued({ result, onReset }: { result: BuyResult; onReset: () => void })
         Gemini now.
       </p>
       <div className="mt-4 flex flex-wrap items-center gap-4 text-sm">
-        <a href="#policies" className="font-medium underline underline-offset-4">
-          Track this policy ↓
-        </a>
+        <Link href="/cover" className="font-medium underline underline-offset-4">
+          Track this policy →
+        </Link>
         <ExtLink href={txUrl(result.txHash)} className="text-fg-2">
           Purchase transaction ↗
         </ExtLink>

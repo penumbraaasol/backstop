@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Market, Outcome, Suggestion } from "@/lib/api";
-import { AssistBar } from "./AssistBar";
+import type { Market, Outcome } from "@/lib/api";
 import { assetOf, horizonOf, type Horizon } from "@/lib/format";
 import { secondsLeft, useMarkets, useStats } from "@/lib/hooks";
 import { CoverTicket } from "./CoverTicket";
@@ -16,15 +15,6 @@ export function CoverSection() {
   const [outcome, setOutcome] = useState<Outcome>("no");
   const [payout, setPayout] = useState(2);
 
-  // Grok's suggestion selects the market, side and size; the buyer reviews and signs
-  const applySuggestion = (s: Suggestion) => {
-    if (!s.instrumentSymbol || !s.outcome || !s.market) return;
-    setHorizon(horizonOf(s.market));
-    setAsset("ALL");
-    setSymbol(s.instrumentSymbol);
-    setOutcome(s.outcome);
-    if (s.payout) setPayout(s.payout);
-  };
 
   // keep the selected market fresh as prices refresh; fall back to the first match when it closes
   const selected = useMemo<Market | undefined>(() => {
@@ -43,10 +33,7 @@ export function CoverSection() {
   return (
     <section id="cover" className="mx-auto max-w-[1240px] px-5 pb-20 pt-14 sm:px-8 sm:pt-20">
       <Intro marketCount={markets?.length} />
-      <div className="mt-12">
-        <AssistBar onSuggestion={applySuggestion} />
-      </div>
-      <div className="mt-5 grid items-start gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+      <div className="mt-12 grid items-start gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
         <div>
           <div>
             <MarketPicker
