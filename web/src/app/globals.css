@@ -1,116 +1,98 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens: the only place colours, fonts, radii and the type scale are defined.
+ * Direction: "the policy schedule". Warm paper, black ink, hairline rules, one green accent.
+ */
 @theme {
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  /* type */
+  --font-serif: var(--font-source-serif), "Iowan Old Style", Georgia, serif;
+  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
 
-  --color-ink: #06070a;
-  --color-surface: #0d1015;
-  --color-raised: #13171e;
-  --color-line: rgb(255 255 255 / 0.08);
-  --color-line-strong: rgb(255 255 255 / 0.14);
-  --color-fg: #eef1f6;
-  --color-muted: #8a93a3;
-  --color-faint: #5b6372;
-  --color-mint: #3ee6b0;
-  --color-mint-deep: #13b885;
-  --color-violet: #8b7bff;
-  --color-yes: #34d399;
-  --color-no: #fb7185;
-  --color-warn: #fbbf24;
+  --text-xs: 0.8125rem;   /* 13px */
+  --text-xs--line-height: 1.35rem;
+  --text-sm: 0.9375rem;   /* 15px */
+  --text-sm--line-height: 1.5rem;
+  --text-md: 1.125rem;    /* 18px */
+  --text-md--line-height: 1.65rem;
+  --text-lg: 1.5rem;      /* 24px */
+  --text-lg--line-height: 2rem;
+  --text-xl: 2.25rem;     /* 36px */
+  --text-xl--line-height: 2.6rem;
+  --text-2xl: 3.5rem;     /* 56px */
+  --text-2xl--line-height: 1.05;
 
-  --animate-fade-up: fade-up 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  --animate-pulse-ring: pulse-ring 2s ease-out infinite;
-  --animate-shimmer: shimmer 1.6s linear infinite;
+  /* colour: each one has a single job */
+  --color-paper: #f5f2ea;        /* page */
+  --color-paper-raised: #fbf9f4; /* inputs, selected row */
+  --color-paper-sunk: #ece7db;   /* hover rows, code wells */
+  --color-ink: #1a1916;          /* text, rules that matter */
+  --color-ink-2: #57534a;        /* secondary text, 6.6:1 on paper */
+  --color-ink-3: #6f6a60;        /* tertiary text, 4.9:1 on paper */
+  --color-rule: #d9d3c5;         /* hairlines */
+  --color-accent: #1e5b3e;       /* primary action + "paid out" only */
+  --color-accent-ink: #f5f2ea;   /* text on accent */
+  --color-pending: #8a5a0b;      /* waiting / refunded */
+  --color-danger: #9e2f25;       /* errors */
 
-  @keyframes fade-up {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: none; }
-  }
-  @keyframes pulse-ring {
-    0% { box-shadow: 0 0 0 0 rgb(62 230 176 / 0.45); }
-    100% { box-shadow: 0 0 0 8px rgb(62 230 176 / 0); }
-  }
-  @keyframes shimmer {
-    from { background-position: -200% 0; }
-    to { background-position: 200% 0; }
-  }
+  /* shape */
+  --radius-sm: 3px;
+  --radius-md: 6px;
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
+  scroll-padding-top: 4.5rem;
 }
 
 body {
-  background: var(--color-ink);
-  color: var(--color-fg);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern";
 }
 
 ::selection {
-  background: rgb(62 230 176 / 0.3);
+  background: #d8e4dc;
 }
 
-/* soft aurora + grid behind the hero */
-.aurora {
-  background:
-    radial-gradient(60rem 30rem at 15% -10%, rgb(62 230 176 / 0.16), transparent 60%),
-    radial-gradient(50rem 28rem at 90% 0%, rgb(139 123 255 / 0.16), transparent 60%);
-}
-.grid-bg {
-  background-image:
-    linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
-  background-size: 56px 56px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+/* all money, odds and times line up in columns */
+.num {
+  font-variant-numeric: tabular-nums lining-nums;
 }
 
-/* glass card with a hairline gradient border */
-.card {
-  position: relative;
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.035), rgb(255 255 255 / 0.015)), var(--color-surface);
-  border: 1px solid var(--color-line);
-  border-radius: 1.25rem;
-  box-shadow: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 20px 60px -30px rgb(0 0 0 / 0.8);
+/* the signature detail: dotted leaders between a label and a figure */
+.leader {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
 }
-.card-glow::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(140deg, rgb(62 230 176 / 0.55), rgb(139 123 255 / 0.25) 40%, transparent 70%);
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+.leader > .dots {
+  flex: 1;
+  min-width: 1rem;
+  border-bottom: 1px dotted var(--color-ink-3);
+  transform: translateY(-0.3em);
 }
 
-.text-gradient {
-  background: linear-gradient(100deg, #ffffff 10%, #b9fbe4 45%, #a99dff 90%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+/* a quiet placeholder while data loads */
+.placeholder {
+  background: var(--color-paper-sunk);
+  border-radius: var(--radius-sm);
 }
 
-.skeleton {
-  background: linear-gradient(90deg, rgb(255 255 255 / 0.04), rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.04));
-  background-size: 200% 100%;
-  animation: var(--animate-shimmer);
+/* feedback only: a step ticking to done, a figure settling in */
+@keyframes settle {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: none; }
 }
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  scrollbar-width: none;
+.settle {
+  animation: settle 0.35s ease-out both;
 }
 
 input[type="number"]::-webkit-inner-spin-button,
@@ -120,6 +102,11 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 input[type="number"] {
   -moz-appearance: textfield;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

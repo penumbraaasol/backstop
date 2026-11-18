@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Copy, Droplets, ExternalLink, LogOut, Wallet } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useChainId, useConnect, useConnection, useConnectors, useDisconnect, useSwitchChain } from "wagmi";
 import { addressUrl, arcTestnet, FAUCET_URL } from "@/lib/chain";
@@ -14,7 +14,7 @@ export function useMounted() {
   return m;
 }
 
-export function ConnectButton({ className, size = "md" }: { className?: string; size?: "md" | "lg" }) {
+export function ConnectButton({ className, block }: { className?: string; block?: boolean }) {
   const mounted = useMounted();
   const { address, isConnected } = useConnection();
   const chainId = useChainId();
@@ -32,28 +32,29 @@ export function ConnectButton({ className, size = "md" }: { className?: string; 
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const big = size === "lg" ? "px-5 py-3 text-[15px]" : "";
+  const w = block ? "w-full py-3" : "";
 
-  if (!mounted) return <div className={cx("h-10 w-36 rounded-xl skeleton", className)} />;
+  if (!mounted) return <div className={cx("placeholder h-10 w-36", block && "w-full", className)} />;
 
   if (!isConnected) {
     const injected = connectors[0];
     const hasWallet = typeof window !== "undefined" && "ethereum" in window;
     if (!hasWallet)
       return (
-        <a href="https://rabby.io" target="_blank" rel="noreferrer" className={className}>
-          <Button variant="secondary" className={big}>
-            <Wallet className="size-4" /> Install a wallet
+        <a href="https://rabby.io" target="_blank" rel="noreferrer" className={cx(block && "block", className)}>
+          <Button variant="secondary" className={w}>
+            {block ? "Install a wallet to continue" : "Install a wallet"}
           </Button>
         </a>
       );
     return (
       <Button
-        className={cx(big, className)}
+        variant={block ? "primary" : "secondary"}
+        className={cx(w, className)}
         loading={isPending}
         onClick={() => injected && connect({ connector: injected, chainId: arcTestnet.id })}
       >
-        <Wallet className="size-4" /> Connect wallet
+        Connect wallet
       </Button>
     );
   }
@@ -62,7 +63,7 @@ export function ConnectButton({ className, size = "md" }: { className?: string; 
     return (
       <Button
         variant="secondary"
-        className={cx("border-warn/40 text-warn", big, className)}
+        className={cx("border-pending text-pending", w, className)}
         loading={switching}
         onClick={() => switchChain({ chainId: arcTestnet.id })}
       >
@@ -70,67 +71,42 @@ export function ConnectButton({ className, size = "md" }: { className?: string; 
       </Button>
     );
 
-  const usdc = bal !== undefined ? (Number(bal) / 1e6).toLocaleString("en-US", { maximumFractionDigits: 2 }) : "–";
+  if (block) return null;
+
+  const usdc = bal !== undefined ? (Number(bal) / 1e6).toFixed(2) : "–";
 
   return (
     <div ref={ref} className={cx("relative", className)}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-xl border border-line-strong bg-white/[0.04] py-1.5 pl-3 pr-2 text-sm transition hover:bg-white/[0.08]"
+        className="flex items-center gap-3 rounded-md border border-rule bg-paper-raised py-2 pl-3 pr-2 text-sm transition-colors hover:border-ink"
       >
-        <span className="font-medium tabular-nums">{usdc} USDC</span>
-        <span className="h-4 w-px bg-line-strong" />
-        <span className="flex items-center gap-1.5 rounded-lg bg-white/[0.06] px-2 py-1 font-mono text-xs text-muted">
-          <span className="size-2 rounded-full bg-linear-to-br from-mint to-violet" />
-          {shortAddr(address)}
-        </span>
-        <ChevronDown className={cx("size-4 text-muted transition", open && "rotate-180")} />
+        <span className="num font-medium">{usdc} USDC</span>
+        <span className="h-4 w-px bg-rule" />
+        <span className="font-mono text-xs text-ink-2">{shortAddr(address)}</span>
+        <ChevronDown className={cx("size-4 text-ink-2 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="card absolute right-0 z-50 mt-2 w-64 animate-fade-up p-1.5 text-sm">
-          <div className="px-3 py-2.5">
-            <p className="text-xs text-muted">Connected to Arc Testnet</p>
-            <p className="mt-0.5 font-mono text-xs">{shortAddr(address)}</p>
-          </div>
-          <MenuItem onClick={() => navigator.clipboard.writeText(address!)} icon={<Copy className="size-4" />}>
-            Copy address
-          </MenuItem>
-          <MenuItem href={addressUrl(address!)} icon={<ExternalLink className="size-4" />}>
-            View on explorer
-          </MenuItem>
-          <MenuItem href={FAUCET_URL} icon={<Droplets className="size-4" />}>
-            Get testnet USDC
-          </MenuItem>
-          <div className="my-1 h-px bg-line" />
-          <MenuItem onClick={() => disconnect()} icon={<LogOut className="size-4" />}>
-            Disconnect
-          </MenuItem>
+        <div className="absolute right-0 z-50 mt-1 w-60 rounded-md border border-ink bg-paper-raised py-1 text-sm shadow-[4px_4px_0_0_var(--color-rule)]">
+          <p className="border-b border-rule px-3 py-2 text-xs text-ink-2">Arc Testnet · {shortAddr(address)}</p>
+          <MenuItem onClick={() => navigator.clipboard.writeText(address!)}>Copy address</MenuItem>
+          <MenuItem href={addressUrl(address!)}>View on Arc explorer</MenuItem>
+          <MenuItem href={FAUCET_URL}>Get testnet USDC</MenuItem>
+          <MenuItem onClick={() => disconnect()}>Disconnect</MenuItem>
         </div>
       )}
     </div>
   );
 }
 
-function MenuItem({
-  children,
-  icon,
-  href,
-  onClick,
-}: {
-  children: React.ReactNode;
-  icon: React.ReactNode;
-  href?: string;
-  onClick?: () => void;
-}) {
-  const cls = "flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-fg/90 transition hover:bg-white/[0.06]";
+function MenuItem({ children, href, onClick }: { children: React.ReactNode; href?: string; onClick?: () => void }) {
+  const cls = "block w-full px-3 py-2 text-left hover:bg-paper-sunk";
   return href ? (
     <a className={cls} href={href} target="_blank" rel="noreferrer">
-      <span className="text-muted">{icon}</span>
-      {children}
+      {children} ↗
     </a>
   ) : (
     <button className={cls} onClick={onClick}>
-      <span className="text-muted">{icon}</span>
       {children}
     </button>
   );

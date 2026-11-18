@@ -1,97 +1,85 @@
-import { BadgeCheck, CircleDollarSign, LineChart, RotateCcw, ShieldCheck, Undo2 } from "lucide-react";
-import { SectionHeading } from "./ui";
+import { Leader } from "./ScheduleView";
+import { Eyebrow } from "./ui";
 
 const STEPS = [
   {
-    icon: LineChart,
-    title: "Priced by the market",
-    body: "Your premium comes from Gemini's live order book: N × (p + s). p is the best ask for your outcome; s is a 3¢ spread.",
+    title: "The price comes from Gemini",
+    body: "Your premium is N × (p + s). N is the payout in USDC, p is Gemini's best ask for your outcome, and s is a fixed 0.03 spread that covers Gemini's fee and Backstop's margin.",
   },
   {
-    icon: CircleDollarSign,
-    title: "Pay once, in USDC",
-    body: "Arc uses USDC for gas and settlement, so one balance covers everything. The contract locks your full payout up front.",
+    title: "You pay once, in USDC, on Arc",
+    body: "Arc uses USDC for gas, so one balance covers the premium and the fees. The contract locks the full payout from its treasury before your policy is issued.",
   },
   {
-    icon: ShieldCheck,
-    title: "Hedged on Gemini",
-    body: "Backstop buys N contracts of your outcome on Gemini, so every policy is backed one-for-one. There's no underwriting pool.",
+    title: "Backstop buys the matching contracts",
+    body: "For every policy, the backend buys N contracts of the same outcome on Gemini. If the event happens, those contracts pay N dollars, which funds your payout.",
   },
   {
-    icon: BadgeCheck,
-    title: "Paid out automatically",
-    body: "When Gemini resolves the market, the resolver posts the result onchain and the contract pays you N USDC if your outcome happened.",
+    title: "The contract pays you",
+    body: "After the market closes, the resolver reads Gemini's official result and posts it on Arc. If your outcome happened, the contract sends you N USDC.",
   },
 ];
 
-const GUARANTEES = [
-  { icon: Undo2, text: "Hedge didn't fill? Your premium is refunded automatically." },
-  { icon: RotateCcw, text: "Backend offline? Claim your premium back yourself 24 h after the deadline." },
-  { icon: ShieldCheck, text: "Locked payouts can't be withdrawn by the operator, ever." },
+const PROTECTIONS = [
+  ["Hedge order doesn't fill", "Your premium is refunded by the contract, automatically."],
+  ["Backstop's server goes down", "24 hours after the deadline you can claim your premium back yourself."],
+  ["Funds for open policies", "Locked in the contract. The operator can only withdraw unlocked funds."],
+  ["Size limits", "Caps per policy and per market limit what any single failure can cost."],
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how" className="relative border-y border-line bg-surface/50">
-      <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
-        <SectionHeading
-          eyebrow="How it works"
-          title="Insurance logic, prediction-market pricing."
-          sub="The prediction market is both the price oracle and the reinsurer, so cover is priced fairly and always backed."
-        />
-        <ol className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {STEPS.map((s, i) => (
-            <li key={s.title} className="card group p-6 transition hover:border-line-strong">
-              <div className="flex items-center justify-between">
-                <span className="flex size-10 items-center justify-center rounded-xl bg-mint/10 text-mint ring-1 ring-mint/20">
-                  <s.icon className="size-5" />
-                </span>
-                <span className="font-mono text-xs text-faint">0{i + 1}</span>
-              </div>
-              <h3 className="mt-5 font-semibold tracking-tight">{s.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{s.body}</p>
-            </li>
-          ))}
-        </ol>
+    <section id="how" className="border-y border-rule bg-paper-raised">
+      <div className="mx-auto grid max-w-[1240px] gap-x-16 gap-y-14 px-5 py-20 sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <div>
+          <Eyebrow>How it works</Eyebrow>
+          <h2 className="mt-2 max-w-lg font-serif text-xl font-medium">
+            The prediction market sets the price and carries the risk.
+          </h2>
+          <ol className="mt-10">
+            {STEPS.map((s, i) => (
+              <li key={s.title} className="grid grid-cols-[2.5rem_1fr] border-t border-rule py-5">
+                <span className="num font-serif text-lg text-ink-2">{i + 1}</span>
+                <div>
+                  <h3 className="font-medium">{s.title}</h3>
+                  <p className="mt-1 max-w-xl text-ink-2">{s.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
 
-        <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_1fr]">
-          <div className="card p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-faint">Worked example</p>
-            <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-              <Figure k="Cover (N)" v="$100" />
-              <Figure k="Gemini ask (p)" v="0.27" />
-              <Figure k="Spread (s)" v="0.03" />
+        <div className="space-y-14 lg:pt-[5.5rem]">
+          <div>
+            <h3 className="border-b-2 border-ink pb-2 font-serif text-lg font-semibold">Worked example</h3>
+            <div className="mt-4 space-y-1.5 text-sm">
+              <Leader label="Payout (N)" value="100.00 USDC" />
+              <Leader label="Gemini price (p)" value="× 0.27" />
+              <Leader label="Spread (s)" value="+ 0.03" />
             </div>
-            <div className="mt-4 rounded-xl bg-black/25 px-4 py-3 text-center font-mono text-sm">
-              100 × (0.27 + 0.03) = <span className="text-mint">$30 premium</span>
+            <div className="mt-3 flex items-baseline justify-between border-t border-ink pt-3">
+              <span className="font-medium">Premium</span>
+              <span className="num font-serif text-lg font-medium">30.00 USDC</span>
             </div>
-            <p className="mt-3 text-sm text-muted">
-              $27 buys 100 contracts on Gemini and $3 is the protocol margin. If the event happens, the contracts pay
-              $100, which funds your $100 payout.
+            <p className="mt-3 text-sm text-ink-2">
+              27 USDC buys 100 contracts on Gemini. 3 USDC is the spread. If the event happens, the contracts pay
+              100 USD, which covers the 100 USDC payout.
             </p>
           </div>
-          <div className="card p-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-faint">Built-in protections</p>
-            <ul className="mt-4 space-y-3">
-              {GUARANTEES.map((g) => (
-                <li key={g.text} className="flex items-start gap-3 text-sm">
-                  <g.icon className="mt-0.5 size-4 shrink-0 text-mint" />
-                  <span className="text-fg/90">{g.text}</span>
-                </li>
+
+          <div>
+            <h3 className="border-b-2 border-ink pb-2 font-serif text-lg font-semibold">If something goes wrong</h3>
+            <dl className="mt-1">
+              {PROTECTIONS.map(([k, v]) => (
+                <div key={k} className="border-b border-rule py-3">
+                  <dt className="font-medium">{k}</dt>
+                  <dd className="mt-0.5 text-sm text-ink-2">{v}</dd>
+                </div>
               ))}
-            </ul>
+            </dl>
           </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function Figure({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="rounded-xl border border-line bg-white/[0.02] p-3">
-      <p className="text-[11px] text-faint">{k}</p>
-      <p className="mt-1 text-xl font-semibold tabular-nums">{v}</p>
-    </div>
   );
 }

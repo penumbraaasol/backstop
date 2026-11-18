@@ -45,7 +45,7 @@ export function sideText(m: Market, outcome: "yes" | "no"): string {
   const asset = assetOf(m);
   if (m.strike) return outcome === "yes" ? `${asset} at or above ${money(m.strike)}` : `${asset} below ${money(m.strike)}`;
   // up/down windows that haven't opened yet have no strike: they compare against the opening price
-  if (/^up$/i.test(m.label)) return outcome === "yes" ? `${asset} up vs. window open` : `${asset} down vs. window open`;
+  if (/^up$/i.test(m.label)) return outcome === "yes" ? `${asset} up from window open` : `${asset} down from window open`;
   return outcome === "yes" ? m.label : `Not “${m.label}”`;
 }
 
@@ -55,4 +55,33 @@ export function previewPremium(payout: number, price: number, spread: number) {
   const premium = (payout * (micro(price) + micro(spread))) / 1_000_000;
   const hedge = (payout * micro(price)) / 1_000_000;
   return { premium, hedge, margin: premium - hedge, valid: price + spread < 1 };
+}
+
+/** "5:30 AM" in the viewer's time zone. */
+export const timeOfDay = (iso: string) =>
+  new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+/** "Nov 17, 05:30:12" for the tracking log (unix seconds). */
+export const stamp = (unix: number) =>
+  new Date(unix * 1000).toLocaleString(undefined, {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+
+/** Plain USDC amount: "1.26". */
+export const usdc = (n: number | string) => Number(n).toFixed(2);
+
+/** Full clause for sentences: "BTC is below $64,935.82 at 5:30 AM". */
+export function condition(m: Market, outcome: "yes" | "no"): string {
+  const asset = assetOf(m);
+  const at = timeOfDay(m.expiry);
+  if (m.strike)
+    return outcome === "yes" ? `${asset} is at or above ${money(m.strike)} at ${at}` : `${asset} is below ${money(m.strike)} at ${at}`;
+  if (/^up$/i.test(m.label))
+    return outcome === "yes" ? `${asset} is up from its opening price at ${at}` : `${asset} is down from its opening price at ${at}`;
+  return outcome === "yes" ? `“${m.label}” happens` : `“${m.label}” doesn't happen`;
 }

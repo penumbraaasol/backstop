@@ -1,42 +1,37 @@
 import { addressUrl, BACKSTOP_ADDRESS, USDC_ADDRESS } from "@/lib/chain";
-import { shortAddr } from "@/lib/format";
-import { Logo } from "./ui";
+import { ExtLink, Wordmark } from "./ui";
 
 export function Footer() {
   return (
-    <footer className="mx-auto max-w-7xl px-5 py-12 sm:px-8">
-      <div className="flex flex-col justify-between gap-8 md:flex-row md:items-start">
+    <footer className="mx-auto max-w-[1240px] px-5 pb-12 pt-4 sm:px-8">
+      <div className="grid gap-8 border-t-2 border-ink pt-6 md:grid-cols-[1fr_auto]">
         <div className="max-w-sm">
-          <Logo />
-          <p className="mt-3 text-sm text-muted">
-            Parametric event cover on Arc, priced and hedged on Gemini Prediction Markets. Built for UBC 2026.
+          <Wordmark />
+          <p className="mt-2 text-sm text-ink-2">
+            Event cover on Arc, priced and hedged on Gemini Prediction Markets. Built for the UBC 2026 hackathon.
           </p>
         </div>
-        <dl className="grid grid-cols-2 gap-x-10 gap-y-3 text-sm sm:grid-cols-3">
+        <dl className="grid gap-x-10 gap-y-3 text-sm sm:grid-cols-3">
           <div>
-            <dt className="text-xs text-faint">Backstop contract</dt>
-            <dd>
-              <a className="font-mono text-muted hover:text-mint" href={addressUrl(BACKSTOP_ADDRESS)} target="_blank" rel="noreferrer">
-                {shortAddr(BACKSTOP_ADDRESS)}
-              </a>
+            <dt className="text-xs text-ink-2">Backstop contract</dt>
+            <dd className="mt-0.5 font-mono text-xs">
+              <ExtLink href={addressUrl(BACKSTOP_ADDRESS)}>{BACKSTOP_ADDRESS.slice(0, 10)}…{BACKSTOP_ADDRESS.slice(-6)}</ExtLink>
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-faint">USDC</dt>
-            <dd>
-              <a className="font-mono text-muted hover:text-mint" href={addressUrl(USDC_ADDRESS)} target="_blank" rel="noreferrer">
-                {shortAddr(USDC_ADDRESS)}
-              </a>
+            <dt className="text-xs text-ink-2">USDC</dt>
+            <dd className="mt-0.5 font-mono text-xs">
+              <ExtLink href={addressUrl(USDC_ADDRESS)}>{USDC_ADDRESS.slice(0, 10)}…{USDC_ADDRESS.slice(-6)}</ExtLink>
             </dd>
           </div>
           <div>
-            <dt className="text-xs text-faint">Network</dt>
-            <dd className="text-muted">Arc Testnet · 5042002</dd>
+            <dt className="text-xs text-ink-2">Network</dt>
+            <dd className="mt-0.5 text-xs">Arc Testnet (5042002)</dd>
           </div>
         </dl>
       </div>
-      <p className="mt-10 border-t border-line pt-6 text-xs text-faint">
-        Testnet prototype. Not insurance, not financial advice. Market data from Gemini Prediction Markets.
+      <p className="mt-8 text-xs text-ink-2">
+        Testnet prototype. Not an insurance contract and not financial advice. Market data: Gemini Prediction Markets.
       </p>
     </footer>
   );
