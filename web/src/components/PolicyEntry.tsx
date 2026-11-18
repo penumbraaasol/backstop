@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import type { PolicyTimeline } from "@/lib/api";
 import { stamp, timeOfDay, usdc } from "@/lib/format";
+import { ArcLogo, GeminiLogo } from "./logos";
 import { cx, ExtLink, Spinner, Status, type Tone } from "./ui";
 
 export type StepTimes = { purchased?: number; resolved?: number; settled?: number };
@@ -27,8 +28,9 @@ export function PolicyEntry({ p, times }: { p: PolicyTimeline; times: StepTimes 
   const expiry = p.marketExpiry ? timeOfDay(p.marketExpiry) : "market close";
   const tx = (url?: string | null, hash?: string) =>
     url && hash ? (
-      <ExtLink href={url} className="font-mono">
-        tx {shortHash(hash)} ↗
+      <ExtLink href={url} className="inline-flex items-center gap-1.5 font-mono">
+        <ArcLogo className="h-3 w-auto text-fg-2" />
+        {shortHash(hash)} ↗
       </ExtLink>
     ) : null;
 
@@ -49,7 +51,12 @@ export function PolicyEntry({ p, times }: { p: PolicyTimeline; times: StepTimes 
           : hedgeFailed
             ? `The order for ${Number(p.payoutUsdc)} ${side} contracts didn't fill at an acceptable price.`
             : `Bought ${s.hedged.filledQty} ${side} at ${s.hedged.fillPrice}${s.hedged.mode ? ` (${s.hedged.mode})` : ""}.`,
-      link: s.hedged.orderId ? <span className="font-mono text-fg-2">order {s.hedged.orderId}</span> : null,
+      link: s.hedged.orderId ? (
+        <span className="inline-flex items-center gap-1.5 font-mono text-fg-2">
+          <GeminiLogo className="h-[11px] w-auto text-fg-2" />
+          {s.hedged.orderId}
+        </span>
+      ) : null,
       state: s.hedged.status === "pending" ? "now" : hedgeFailed ? "failed" : "done",
     },
   ];

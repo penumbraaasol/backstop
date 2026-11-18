@@ -1,4 +1,5 @@
 import { addressUrl, BACKSTOP_ADDRESS, USDC_ADDRESS } from "@/lib/chain";
+import { ArcLogo, GeminiLogo } from "./logos";
 import { ExtLink, Wordmark } from "./ui";
 
 export function Footer() {
@@ -10,6 +11,10 @@ export function Footer() {
           <p className="mt-2 text-sm text-fg-2">
             Event cover on Arc, priced and hedged on Gemini Prediction Markets. Built for the UBC 2026 hackathon.
           </p>
+          <div className="mt-5 flex items-center gap-5 text-fg-2">
+            <ArcLogo className="h-5 w-auto" />
+            <GeminiLogo className="h-4 w-auto" />
+          </div>
         </div>
         <dl className="grid gap-x-10 gap-y-3 text-sm sm:grid-cols-3">
           <div>

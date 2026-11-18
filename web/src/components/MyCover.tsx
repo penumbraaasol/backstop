@@ -40,10 +40,11 @@ export function MyCover() {
     <section id="policies" className="mx-auto max-w-[1240px] px-5 py-20 sm:px-8">
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
-          <Eyebrow>My policies</Eyebrow>
-          <h2 className="mt-3 font-display text-xl font-semibold tracking-[-0.03em]">Every policy, step by step</h2>
+          <Eyebrow>My cover</Eyebrow>
+          <h2 className="mt-3 font-display text-xl font-semibold tracking-[-0.03em]">Cover you&apos;ve bought</h2>
           <p className="mt-2 max-w-xl text-sm text-fg-2">
-            Each step links to its transaction on Arc or its order on Gemini, so you can check it yourself.
+            Every policy bought from this wallet, tracked from purchase until it pays out or is refunded. Each step links to
+            its transaction on Arc or its order on Gemini.
           </p>
         </div>
         {policies && policies.length > 0 && <Totals policies={policies} />}
@@ -54,14 +55,14 @@ export function MyCover() {
           <div className="placeholder h-40" />
         ) : !isConnected ? (
           <div className="flex flex-wrap items-center justify-between gap-4 border-y border-line py-8">
-            <p className="text-fg-2">Connect your wallet to see the policies you&apos;ve bought.</p>
+            <p className="text-fg-2">Connect your wallet to see the cover you&apos;ve bought.</p>
             <ConnectButton />
           </div>
         ) : isLoading ? (
           <div className="placeholder h-40" />
         ) : !policies?.length ? (
           <div className="border-y border-line py-8">
-            <p className="font-display text-md">No policies yet.</p>
+            <p className="font-medium">Nothing bought yet.</p>
             <p className="mt-1 text-sm text-fg-2">A policy appears here a few seconds after you buy it.</p>
           </div>
         ) : (

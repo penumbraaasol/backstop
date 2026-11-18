@@ -3,8 +3,10 @@
 import { useMemo } from "react";
 import type { Market, Outcome } from "@/lib/api";
 import { assetOf, countdown, HORIZONS, horizonOf, sideText, timeOfDay, type Horizon } from "@/lib/format";
-import { secondsLeft, useNow } from "@/lib/hooks";
+import { secondsLeft, useNow, usePriceTicks, type Tick } from "@/lib/hooks";
 import { cx, Ticker } from "./ui";
+
+const ROW = "grid grid-cols-[1fr_auto] items-center gap-4 sm:grid-cols-[minmax(0,1fr)_4.5rem_6rem_auto]";
 
 export function MarketPicker({
   markets,
@@ -30,6 +32,7 @@ export function MarketPicker({
   onPick: (m: Market, o?: Outcome) => void;
 }) {
   const now = useNow();
+  const ticks = usePriceTicks(markets);
   const assets = useMemo(() => [...new Set((markets ?? []).map(assetOf))].filter(Boolean), [markets]);
   const list = (markets ?? []).filter(
     (m) => horizonOf(m) === horizon && (asset === "ALL" || assetOf(m) === asset) && secondsLeft(m, now) > 45,
@@ -37,7 +40,6 @@ export function MarketPicker({
 
   return (
     <div className="rounded-lg border border-line bg-surface px-5 pb-4 pt-3">
-      {/* horizon: underlined text tabs */}
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-line">
         <div className="flex gap-6" role="tablist">
           {HORIZONS.map((h) => (
@@ -48,7 +50,7 @@ export function MarketPicker({
               onClick={() => setHorizon(h.id)}
               className={cx(
                 "-mb-px border-b-2 pb-2.5 text-sm font-medium transition-colors",
-                horizon === h.id ? "border-line-strong text-fg" : "border-transparent text-fg-2 hover:text-fg",
+                horizon === h.id ? "border-fg text-fg" : "border-transparent text-fg-2 hover:text-fg",
               )}
             >
               {h.label}
@@ -71,8 +73,9 @@ export function MarketPicker({
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_auto] gap-4 border-b border-line py-2 text-xs text-fg-2 sm:grid-cols-[1fr_6.5rem_auto]">
+      <div className={cx(ROW, "border-b border-line py-2 text-xs text-fg-2")}>
         <span>Outcome</span>
+        <span className="hidden text-right sm:block">Yes, live</span>
         <span className="hidden text-right sm:block">Closes</span>
         <span className="flex gap-1">
           <span className="w-[4.5rem] text-center">Yes</span>
@@ -84,7 +87,7 @@ export function MarketPicker({
         <ul>
           {Array.from({ length: 7 }).map((_, i) => (
             <li key={i} className="flex items-center gap-3 border-b border-line py-3.5">
-              <span className="placeholder h-5 w-12" />
+              <span className="placeholder h-6 w-12" />
               <span className="placeholder h-4 flex-1" />
               <span className="placeholder h-8 w-36" />
             </li>
@@ -96,75 +99,185 @@ export function MarketPicker({
         <Note title="No open markets in this window." body="New windows open every few minutes. Try another horizon or asset." />
       ) : (
         <ul>
-          {list.map((m) => {
-            const active = m.instrumentSymbol === selected;
-            const left = secondsLeft(m, now);
-            return (
-              <li key={m.instrumentSymbol}>
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => onPick(m)}
-                  onKeyDown={(e) => e.key === "Enter" && onPick(m)}
-                  className={cx(
-                    "grid cursor-pointer grid-cols-[1fr_auto] items-center gap-4 border-b border-line py-3 pl-3 pr-1 transition-colors sm:grid-cols-[1fr_6.5rem_auto]",
-                    active ? "bg-surface-2 shadow-[inset_2px_0_0_0_var(--color-fg)]" : "hover:bg-surface-2/60",
-                  )}
-                >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Ticker asset={assetOf(m)} />
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-fg">{sideText(m, "yes")}</p>
-                      <p className="truncate text-xs text-fg-2">
-                        <span className="num font-mono sm:hidden">in {countdown(left)} · </span>
-                        {m.title}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="hidden text-right sm:block">
-                    <p className="num text-sm text-fg">{timeOfDay(m.expiry)}</p>
-                    <p className={cx("num font-mono text-xs", left < 120 ? "text-warn" : "text-fg-2")}>
-                      in {countdown(left)}
-                    </p>
-                  </div>
-                  <div className="flex gap-1">
-                    {(["yes", "no"] as const).map((o) => {
-                      const on = active && outcome === o;
-                      const price = o === "yes" ? m.askYes : m.askNo;
-                      return (
-                        <button
-                          key={o}
-                          aria-label={`Cover ${o}, ${price.toFixed(2)} USDC per 1 USDC payout`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onPick(m, o);
-                          }}
-                          className={cx(
-                            "num w-[4.5rem] rounded-sm py-1.5 text-sm font-semibold transition-colors",
-                            o === "yes"
-                              ? on
-                                ? "bg-up text-bg"
-                                : "bg-up/10 text-up hover:bg-up/20"
-                              : on
-                                ? "bg-down text-bg"
-                                : "bg-down/10 text-down hover:bg-down/20",
-                          )}
-                        >
-                          {price.toFixed(2)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
+          {list.map((m) => (
+            <MarketRow
+              key={m.instrumentSymbol}
+              m={m}
+              tick={ticks.get(m.instrumentSymbol)}
+              now={now}
+              active={m.instrumentSymbol === selected}
+              outcome={outcome}
+              onPick={onPick}
+            />
+          ))}
         </ul>
       )}
       <p className="mt-3 text-xs text-fg-2">
-        Prices are Gemini&apos;s current best ask, in USDC per 1 USDC of payout. They refresh every 5 seconds.
+        Prices are Gemini&apos;s best ask, in USDC per 1 USDC of payout, refreshed every 5 seconds. The thin line under
+        each row shows how much of the market&apos;s window has passed.
       </p>
     </div>
+  );
+}
+
+function MarketRow({
+  m,
+  tick,
+  now,
+  active,
+  outcome,
+  onPick,
+}: {
+  m: Market;
+  tick?: Tick;
+  now: number;
+  active: boolean;
+  outcome: Outcome;
+  onPick: (m: Market, o?: Outcome) => void;
+}) {
+  const left = secondsLeft(m, now);
+  const start = m.startTime ? new Date(m.startTime).getTime() : null;
+  const end = new Date(m.expiry).getTime();
+  const elapsed = start && end > start ? Math.min(1, Math.max(0, (now - start) / (end - start))) : null;
+  const yesShare = m.askYes / (m.askYes + m.askNo);
+
+  return (
+    <li className="relative">
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => onPick(m)}
+        onKeyDown={(e) => e.key === "Enter" && onPick(m)}
+        className={cx(
+          ROW,
+          "cursor-pointer border-b border-line py-3 pl-3 pr-1 transition-colors",
+          active ? "bg-surface-2 shadow-[inset_2px_0_0_0_var(--color-fg)]" : "hover:bg-surface-2/60",
+        )}
+      >
+        <div className="flex min-w-0 items-center gap-3">
+          <Ticker asset={assetOf(m)} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-fg">{sideText(m, "yes")}</p>
+            <p className="truncate text-xs text-fg-2">
+              <span className="num font-mono sm:hidden">in {countdown(left)} · </span>
+              {m.title}
+            </p>
+            {/* implied odds: YES share vs NO share of the two asks */}
+            <div
+              className="mt-1.5 flex h-[3px] w-full max-w-[200px] gap-px overflow-hidden rounded-full"
+              title={`Implied odds: YES ${Math.round(yesShare * 100)}%, NO ${Math.round((1 - yesShare) * 100)}%`}
+            >
+              <span className="rounded-l-full bg-up/70" style={{ width: `${yesShare * 100}%` }} />
+              <span className="flex-1 rounded-r-full bg-down/60" />
+            </div>
+          </div>
+        </div>
+        <div className="hidden justify-end sm:flex">
+          <Sparkline series={tick?.series} />
+        </div>
+        <div className="hidden text-right sm:block">
+          <p className="num text-sm text-fg">{timeOfDay(m.expiry)}</p>
+          <p className={cx("num font-mono text-xs", left < 120 ? "text-warn" : "text-fg-2")}>in {countdown(left)}</p>
+        </div>
+        <div className="flex gap-1">
+          {(["yes", "no"] as const).map((o) => (
+            <PriceChip
+              key={`${o}-${o === "yes" ? tick?.yesSeq : tick?.noSeq}`}
+              side={o}
+              price={o === "yes" ? m.askYes : m.askNo}
+              on={active && outcome === o}
+              dir={o === "yes" ? tick?.yesDir : tick?.noDir}
+              changed={!!(o === "yes" ? tick?.yesSeq : tick?.noSeq)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onPick(m, o);
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      {elapsed !== null && (
+        <span
+          aria-hidden
+          className="pointer-events-none absolute bottom-0 left-0 h-px bg-fg-3"
+          style={{ width: `${elapsed * 100}%` }}
+        />
+      )}
+    </li>
+  );
+}
+
+function PriceChip({
+  side,
+  price,
+  on,
+  dir,
+  changed,
+  onClick,
+}: {
+  side: Outcome;
+  price: number;
+  on: boolean;
+  dir?: -1 | 0 | 1;
+  changed: boolean;
+  onClick: (e: React.MouseEvent) => void;
+}) {
+  const yes = side === "yes";
+  return (
+    <button
+      aria-label={`Cover ${side}, ${price.toFixed(2)} USDC per 1 USDC payout`}
+      onClick={onClick}
+      className={cx(
+        "num relative w-[4.5rem] rounded-sm py-1.5 text-sm font-semibold transition-colors",
+        yes
+          ? on
+            ? "bg-up text-bg"
+            : "bg-up/10 text-up hover:bg-up/20"
+          : on
+            ? "bg-down text-bg"
+            : "bg-down/10 text-down hover:bg-down/20",
+        changed && dir === 1 && "flash-up",
+        changed && dir === -1 && "flash-down",
+      )}
+    >
+      {price.toFixed(2)}
+      {changed && dir ? (
+        <span
+          className={cx(
+            "absolute right-1.5 top-1 text-[8px] leading-none",
+            on ? "text-bg" : dir === 1 ? "text-up" : "text-down",
+          )}
+        >
+          {dir === 1 ? "▲" : "▼"}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+/** YES price since the page opened. Green if it's up from the first point, red if down. */
+function Sparkline({ series }: { series?: number[] }) {
+  const W = 64;
+  const H = 22;
+  if (!series || series.length < 2)
+    return (
+      <svg width={W} height={H} aria-hidden>
+        <line x1="0" x2={W} y1={H / 2} y2={H / 2} stroke="var(--color-line-strong)" strokeDasharray="2 3" />
+      </svg>
+    );
+  const min = Math.min(...series);
+  const max = Math.max(...series);
+  const span = max - min || 0.01;
+  const pts = series.map((v, i) => [(i / (series.length - 1)) * W, H - 3 - ((v - min) / span) * (H - 6)] as const);
+  const d = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join("");
+  const delta = series[series.length - 1]! - series[0]!;
+  const color = delta > 0 ? "var(--color-up)" : delta < 0 ? "var(--color-down)" : "var(--color-fg-3)";
+  const [lx, ly] = pts[pts.length - 1]!;
+  return (
+    <svg width={W} height={H} role="img" aria-label={`YES ${delta >= 0 ? "up" : "down"} ${Math.abs(delta).toFixed(2)} since the page opened`}>
+      <path d={d} fill="none" stroke={color} strokeWidth="1.25" strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={lx} cy={ly} r="1.75" fill={color} />
+    </svg>
   );
 }
 

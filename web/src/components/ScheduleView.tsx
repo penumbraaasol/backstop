@@ -41,7 +41,7 @@ export function ScheduleView(props: ScheduleProps) {
   return (
     <section aria-label="Policy schedule" className="rounded-lg border border-line bg-surface px-5 pb-5">
       <div className="flex items-baseline justify-between pb-2.5 pt-3">
-        <h2 className="font-display text-md font-semibold tracking-tight">Your cover</h2>
+        <h2 className="font-display text-md font-semibold tracking-tight">New cover</h2>
         <span className="font-mono text-xs text-fg-2">
           {result ? `No. ${result.policyId}` : "Draft"}
         </span>

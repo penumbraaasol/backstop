@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { MarketPicker } from "@/components/MarketPicker";
 import { Leader, ScheduleView, type ScheduleProps } from "@/components/ScheduleView";
 import { PolicyEntry } from "@/components/PolicyEntry";
 import { Button, Eyebrow } from "@/components/ui";
@@ -99,9 +100,40 @@ const POLICIES: [string, PolicyTimeline][] = [
 
 const TIMES = { purchased: T0, resolved: T0 + 615, settled: T0 + 617 };
 
+/** Sample markets whose prices drift every second, so the live row details can be reviewed offline. */
+function useDriftingMarkets(now: number) {
+  const base: Market[] = ["BTC", "ETH", "SOL", "XRP"].map((a, i) => ({
+    ...market(now),
+    instrumentSymbol: `GEMI-${a}15M2611170545-UP`,
+    title: `${a} price today at 12:45am EST`,
+    strike: ["64935.82", "1798.85", "74.78", "0.98"][i]!,
+    startTime: new Date(now - (6 + i) * 60_000).toISOString(),
+    askYes: [0.6, 0.53, 0.48, 0.35][i]!,
+    askNo: [0.42, 0.5, 0.55, 0.68][i]!,
+  }));
+  const [ms, setMs] = useState(base);
+  useEffect(() => {
+    let k = 0;
+    const t = setInterval(() => {
+      k++;
+      setMs((cur) =>
+        cur.map((m, i) => {
+          const step = Math.round(Math.sin(k * (i + 1.3)) * 2) / 100;
+          const yes = Math.min(0.95, Math.max(0.05, +(m.askYes + step).toFixed(2)));
+          return { ...m, askYes: yes, askNo: +(1.02 - yes).toFixed(2) };
+        }),
+      );
+    }, 1000);
+    return () => clearInterval(t);
+  }, []);
+  return ms;
+}
+
 export function PreviewStates() {
   const [now] = useState(() => Date.now());
   const m = market(now);
+  const drifting = useDriftingMarkets(now);
+  const [sel, setSel] = useState(drifting[0]!.instrumentSymbol);
   const base: ScheduleProps = {
     market: m,
     outcome: "no",
@@ -138,8 +170,25 @@ export function PreviewStates() {
       <Eyebrow>Design review</Eyebrow>
       <h1 className="mt-2 font-display text-xl">Every state, from fixed data</h1>
       <div className="mt-6 max-w-md space-y-1.5 text-sm">
-        <Leader label="Ink on paper" value="#1a1916 / #f5f2ea" />
-        <Leader label="Accent" value="#1e5b3e" />
+        <Leader label="Text on background" value="#f2f2f3 / #0a0a0b" />
+        <Leader label="YES / NO" value="#22ab94 / #f23645" />
+      </div>
+
+      <div className="mt-12 max-w-3xl">
+        <Frame name="Market table: live prices (sample data drifting every second)">
+          <MarketPicker
+            markets={drifting}
+            loading={false}
+            error={false}
+            horizon="15m"
+            setHorizon={() => {}}
+            asset="ALL"
+            setAsset={() => {}}
+            selected={sel}
+            outcome="no"
+            onPick={(x) => setSel(x.instrumentSymbol)}
+          />
+        </Frame>
       </div>
 
       <div className="mt-12 grid gap-x-14 gap-y-16 md:grid-cols-2">

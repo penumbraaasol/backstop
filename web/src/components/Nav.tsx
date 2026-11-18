@@ -2,11 +2,12 @@
 
 import { useBackendConfig } from "@/lib/hooks";
 import { ConnectButton } from "./ConnectButton";
+import { ArcLogo, GeminiLogo } from "./logos";
 import { Wordmark } from "./ui";
 
 const LINKS = [
   { href: "#cover", label: "Buy cover" },
-  { href: "#policies", label: "My policies" },
+  { href: "#policies", label: "My cover" },
   { href: "#how", label: "How it works" },
 ];
 
@@ -28,8 +29,13 @@ export function Nav() {
           </div>
         </div>
         <div className="flex items-center gap-5">
-          <p className="hidden text-xs text-fg-2 lg:block">
-            Arc Testnet{conf ? ` · hedges on Gemini ${conf.hedgeMode}` : ""}
+          <p className="hidden items-center gap-2 text-xs text-fg-2 lg:flex">
+            <span>Settled on</span>
+            <ArcLogo className="h-3.5 w-auto text-fg" />
+            <span className="mx-1 h-3 w-px bg-line-strong" />
+            <span>Hedged on</span>
+            <GeminiLogo className="h-3 w-auto text-fg" />
+            {conf && conf.hedgeMode !== "live" && <span className="text-fg-3">({conf.hedgeMode})</span>}
           </p>
           <ConnectButton />
         </div>

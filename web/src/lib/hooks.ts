@@ -165,3 +165,46 @@ export function useBuyCover() {
 
   return { step, error, result, quoteExpiry, buy, reset };
 }
+
+export type Tick = {
+  lastNo?: number;
+  /** YES ask after each refresh since the page opened (max 60 points = 5 minutes) */
+  series: number[];
+  yesDir: -1 | 0 | 1;
+  noDir: -1 | 0 | 1;
+  /** bumps whenever a price changes, used to restart the flash animation */
+  yesSeq: number;
+  noSeq: number;
+};
+
+/** Records each market's prices on every refresh, so rows can show movement. */
+export function usePriceTicks(markets: Market[] | undefined) {
+  const [ticks, setTicks] = useState<Map<string, Tick>>(() => new Map());
+  useEffect(() => {
+    if (!markets) return;
+    setTicks((prev) => {
+      const next = new Map<string, Tick>();
+      for (const m of markets) {
+        const t = prev.get(m.instrumentSymbol);
+        if (!t) {
+          next.set(m.instrumentSymbol, { series: [m.askYes], yesDir: 0, noDir: 0, yesSeq: 0, noSeq: 0 });
+          continue;
+        }
+        const lastYes = t.series[t.series.length - 1]!;
+        const prevNo = t.lastNo ?? m.askNo;
+        const yesDir = Math.sign(m.askYes - lastYes) as Tick["yesDir"];
+        const noDir = Math.sign(m.askNo - prevNo) as Tick["noDir"];
+        next.set(m.instrumentSymbol, {
+          series: [...t.series, m.askYes].slice(-60),
+          yesDir: yesDir || t.yesDir,
+          noDir: noDir || t.noDir,
+          yesSeq: t.yesSeq + (yesDir ? 1 : 0),
+          noSeq: t.noSeq + (noDir ? 1 : 0),
+          lastNo: m.askNo,
+        });
+      }
+      return next;
+    });
+  }, [markets]);
+  return ticks;
+}

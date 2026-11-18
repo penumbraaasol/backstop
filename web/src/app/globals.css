@@ -119,3 +119,11 @@ input[type="number"] {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* a price moved: a brief neutral ring; the arrow carries the direction, the chip keeps its YES/NO colour */
+@keyframes tick {
+  from { box-shadow: inset 0 0 0 1px rgb(242 242 243 / 0.7); }
+  to { box-shadow: inset 0 0 0 1px rgb(242 242 243 / 0); }
+}
+.flash-up,
+.flash-down { animation: tick 0.9s ease-out; }
