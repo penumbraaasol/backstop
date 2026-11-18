@@ -24,7 +24,7 @@ function useTxTime(hash?: string | null) {
   }).data;
 }
 
-function TrackedPolicy({ p }: { p: PolicyTimeline }) {
+export function TrackedPolicy({ p }: { p: PolicyTimeline }) {
   const purchased = useTxTime(p.steps.purchased.tx);
   const resolved = useTxTime(p.steps.resolved.tx);
   const settled = useTxTime(p.steps.settled.tx);

@@ -7,6 +7,7 @@ import { Wordmark } from "./ui";
 
 const LINKS = [
   { href: "#cover", label: "Buy cover" },
+  { href: "#agent", label: "Grok agent" },
   { href: "#policies", label: "My cover" },
   { href: "#how", label: "How it works" },
 ];

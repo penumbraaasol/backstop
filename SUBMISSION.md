@@ -25,7 +25,7 @@ Backstop packages a prediction-market position as a simple insurance product: "p
 4. **Resolve.** After expiry, the backend reads Gemini's `resolutionSide` and calls `resolveMarket` once per market, then `settle` for each policy. The contract pays N USDC to winning policies and releases the locked liquidity.
 5. **Safety valves.** If the backend disappears, buyers can call `claimRefund` 24 h after the deadline. The owner can only withdraw unlocked liquidity, and per-policy and per-market caps bound the exposure.
 
-An optional **cover assistant** powered by Grok turns a plain-English worry ("I hold BTC and I'm worried it drops in the next hour") into a filled-in policy: the right market, the side that offsets the risk, and a size. It only suggests. The buyer reviews the policy and signs it from their own wallet, and the backend checks every suggestion against the live market list and the payout limits.
+An optional **cover assistant** powered by Grok turns a plain-English worry ("I hold BTC and I'm worried it drops in the next hour") into a filled-in policy: the right market, the side that offsets the risk, and a size. In "suggest" mode it only fills in the ticket and the buyer signs. In **agent** mode, Grok acts on its own: the backend buys the policy on Arc from the agent's own testnet wallet with no human signature, inside hard limits (a per-policy payout cap, a daily spending budget, a balance check and an on/off switch). Every decision is logged with Grok's reasoning and the transaction, and the policy is hedged and settled like any other.
 
 Every path (payout, expiry, refund) has run on Arc testnet, including a real Gemini sandbox fill that paid out and a real unfilled order that was refunded.
 

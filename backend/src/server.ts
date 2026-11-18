@@ -11,6 +11,7 @@ import { curatedMarkets } from "./markets.js";
 import { formatUsdc, makeQuote, QuoteError } from "./quotes.js";
 import { resolveOnce } from "./resolver.js";
 import { allowAssist, suggestCover } from "./assist.js";
+import { agentAddress, agentEnabled, agentStatus, runAgent } from "./agent.js";
 
 const app = Fastify({ logger: { level: "info" }, disableRequestLogging: true });
 await app.register(cors, { origin: true });
@@ -27,6 +28,7 @@ app.get("/config", async () => ({
   resolver: resolverAccount.address,
   hedgeMode: cfg.HEDGE_MODE,
   assistant: !!cfg.GROK_API_KEY,
+  agent: agentEnabled() ? agentAddress : null,
   spread: cfg.SPREAD,
   maxSlippage: cfg.MAX_SLIPPAGE,
 }));
@@ -81,6 +83,21 @@ app.post("/assist", async (req, reply) => {
   if (!allowAssist(req.ip)) return reply.code(429).send({ error: "rate_limited", message: "Too many requests. Try again in a minute." });
   try {
     return await suggestCover(parsed.data.message);
+  } catch (e) {
+    if (e instanceof QuoteError) return reply.code(e.status).send({ error: e.code, message: e.message });
+    req.log.error(e);
+    return reply.code(502).send({ error: "upstream", message: (e as Error).message });
+  }
+});
+
+app.get("/agent", async () => agentStatus());
+
+app.post("/agent/run", async (req, reply) => {
+  const parsed = assistBody.safeParse(req.body);
+  if (!parsed.success) return reply.code(400).send({ error: "bad_request", message: "Tell the agent what to protect against." });
+  if (!allowAssist(req.ip, 3)) return reply.code(429).send({ error: "rate_limited", message: "The agent takes 3 instructions a minute. Try again shortly." });
+  try {
+    return await runAgent(parsed.data.message);
   } catch (e) {
     if (e instanceof QuoteError) return reply.code(e.status).send({ error: e.code, message: e.message });
     req.log.error(e);

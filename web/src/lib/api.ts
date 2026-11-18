@@ -32,6 +32,8 @@ export type BackendConfig = {
   resolver: `0x${string}`;
   hedgeMode: "simulated" | "sandbox" | "live";
   assistant?: boolean;
+  /** agent wallet address when the Grok agent is switched on */
+  agent?: `0x${string}` | null;
   spread: number;
   maxSlippage: number;
 };
@@ -78,6 +80,48 @@ export type Suggestion = {
   reasoning: string;
   market?: Market;
   model: string;
+};
+
+export type AgentAction = {
+  id: number;
+  at: number;
+  instruction: string;
+  summary: string;
+  reasoning: string;
+  instrumentSymbol: string | null;
+  outcome: Outcome | null;
+  payout: number | null;
+  premiumUsdc: string | null;
+  policyId: number | null;
+  tx: string | null;
+  url: string | null;
+  status: "bought" | "declined" | "blocked" | "failed";
+  error: string | null;
+  model: string;
+};
+
+export type AgentStatus = {
+  enabled: boolean;
+  address: `0x${string}` | null;
+  balanceUsdc: string;
+  maxPayoutUsdc: number;
+  dailyBudgetUsdc: string;
+  spentTodayUsdc: string;
+  model: string;
+  actions: AgentAction[];
+};
+
+export type AgentRun = {
+  id: number;
+  status: AgentAction["status"];
+  summary: string;
+  reasoning: string;
+  policyId?: number;
+  tx?: string;
+  url?: string;
+  premiumUsdc?: string;
+  payout?: number;
+  error?: string;
 };
 
 export type PolicyStatus = "active" | "paid_out" | "expired" | "refunded";
@@ -139,6 +183,13 @@ export const api = {
   policies: (address: string) => call<{ policies: PolicyTimeline[] }>(`/policies/${address}`).then((r) => r.policies),
   assist: (message: string) =>
     call<Suggestion>("/assist", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message }),
+    }),
+  agent: () => call<AgentStatus>("/agent"),
+  runAgent: (message: string) =>
+    call<AgentRun>("/agent/run", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ message }),

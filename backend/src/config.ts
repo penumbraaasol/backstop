@@ -52,6 +52,12 @@ const schema = z.object({
   /** optional: enables POST /assist (Grok suggests a policy; the buyer still signs) */
   GROK_API_KEY: optionalStr,
   GROK_MODEL: z.string().default("grok-4.20-0309-non-reasoning"),
+  /** optional: a testnet wallet the Grok agent buys cover from, on its own */
+  PRIVATE_KEY_AGENT: optionalKey,
+  AGENT_ENABLED: z.preprocess((v) => v === "true" || v === "1", z.boolean()).default(false),
+  /** caps: per policy payout (whole USDC) and total premium the agent may spend per UTC day */
+  AGENT_MAX_PAYOUT: z.coerce.number().int().positive().default(3),
+  AGENT_DAILY_BUDGET_USDC: z.coerce.number().positive().default(5),
 
   // unused by the backend, accepted so a shared .env validates
   PRIVATE_KEY_DEPLOYER: optionalKey,

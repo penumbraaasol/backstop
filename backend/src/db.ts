@@ -69,6 +69,24 @@ CREATE TABLE IF NOT EXISTS markets (
   resolved_at      INTEGER
 );
 
+-- every decision the Grok agent made, including the ones where it chose not to buy
+CREATE TABLE IF NOT EXISTS agent_actions (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  at                INTEGER NOT NULL,
+  instruction       TEXT NOT NULL,
+  summary           TEXT NOT NULL,
+  reasoning         TEXT NOT NULL,
+  instrument_symbol TEXT,
+  outcome           TEXT,
+  payout            INTEGER,
+  premium           TEXT,             -- USDC base units
+  policy_id         INTEGER,
+  tx                TEXT,
+  status            TEXT NOT NULL,    -- bought | declined | blocked | failed
+  error             TEXT,
+  model             TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS kv (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL

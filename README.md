@@ -209,8 +209,9 @@ Covering YES buys YES contracts; covering NO buys NO contracts. All math is done
 | `hedger.ts` | Buys N contracts of the covered outcome for each new policy; on failure calls `cancelAndRefund` |
 | `resolver.ts` | Polls Gemini for `resolutionSide` after expiry, then calls `resolveMarket` and `settle` |
 | `assist.ts` | Optional cover assistant: Grok (xAI) turns a plain-English risk into a suggested market, side and payout |
+| `agent.ts` | Optional Grok agent: buys the suggested policy from its own testnet wallet, within a per-policy cap and a daily budget, and logs every decision |
 
-API: `GET /markets`, `POST /quote`, `POST /assist`, `GET /policies/:address`, `GET /policy/:id`, `GET /config`, `GET /stats`, `GET /health`.
+API: `GET /markets`, `POST /quote`, `POST /assist`, `GET /agent`, `POST /agent/run`, `GET /policies/:address`, `GET /policy/:id`, `GET /config`, `GET /stats`, `GET /health`.
 
 **Hedge modes.** Market data always comes from Gemini production.
 - `simulated` sends no order. It records a fill at the live production ask if that ask is within the limit price, and otherwise fails, which triggers the refund path. Set `SIMULATE_HEDGE_FAILURE=true` to force the refund path for a demo.
@@ -241,6 +242,7 @@ The e2e script picks the next priced BTC 5-minute market, gets a signed quote, a
 `web/` is Next.js 16 (App Router) with wagmi 3, viem and Tailwind 4. It is a single page:
 
 - **Ask Grok**: describe a risk in plain English ("I hold BTC and I'm worried it drops in the next hour"). Grok picks the market, side and payout that offset it and fills in the cover panel. It only suggests: the buyer reviews and signs the purchase. The backend checks every suggestion against the live market list and the payout limits, and rate-limits requests. Set `GROK_API_KEY` to enable it; `pnpm assist:check` tests it against sample markets.
+- **Grok agent**: "Let Grok buy it" has the agent act on the request by itself. Grok chooses the policy, then the backend buys it on Arc from the agent's own testnet wallet (`PRIVATE_KEY_AGENT`) with no human signature. Limits: `AGENT_MAX_PAYOUT` per policy, `AGENT_DAILY_BUDGET_USDC` per UTC day, a balance check, one purchase at a time, and an on/off switch (`AGENT_ENABLED`). Every decision, including declines and blocked purchases, is logged with Grok's reasoning and shown on the page with the agent's policies tracked to settlement.
 - **Get cover**: live Gemini markets grouped by horizon (5 min, 15 min, hourly, daily+) and asset. Tap YES or NO, choose a payout, and the ticket shows the premium live as `N × (p + s)`, with the hedge cost and protocol margin.
 - **Buy flow**: one click runs signed quote → USDC approve (only if needed) → `buyPolicy`, with a visible step for each and the 60 s quote validity.
 - **My cover**: every policy for the connected wallet with a four-step timeline (purchased → hedged on Gemini → resolved → paid out / expired / refunded), each linked to its Arc transaction.
