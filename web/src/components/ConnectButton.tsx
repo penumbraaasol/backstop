@@ -37,12 +37,13 @@ export function ConnectButton({ className, block, compact }: { className?: strin
   if (!mounted) return <div className={cx("placeholder h-10 w-36", block && "w-full", className)} />;
 
   if (!isConnected) {
-    // wallets announce themselves (EIP-6963): use MetaMask when it's installed, otherwise whatever wallet is there
-    const injected =
-      connectors.find((c) => c.id === "io.metamask" || /metamask/i.test(c.name)) ??
-      connectors.find((c) => c.id !== "injected") ??
-      connectors[0];
-    const hasWallet = typeof window !== "undefined" && "ethereum" in window;
+    // wallets announce themselves (EIP-6963); list them with MetaMask first and let the user choose
+    const announced = connectors.filter((c) => c.id !== "injected");
+    const wallets = (announced.length ? announced : connectors)
+      .slice()
+      .sort((a, b) => Number(b.id === "io.metamask") - Number(a.id === "io.metamask"));
+    const hasMetaMask = wallets.some((c) => c.id === "io.metamask");
+    const hasWallet = wallets.length > 0 && typeof window !== "undefined" && "ethereum" in window;
     if (!hasWallet)
       return (
         <a href="https://metamask.io/download" target="_blank" rel="noreferrer" className={cx(block && "block", className)}>
@@ -52,14 +53,44 @@ export function ConnectButton({ className, block, compact }: { className?: strin
         </a>
       );
     return (
-      <Button
-        variant={block ? "primary" : "secondary"}
-        className={cx(w, className)}
-        loading={isPending}
-        onClick={() => injected && connect({ connector: injected, chainId: arcTestnet.id })}
-      >
-        Connect wallet
-      </Button>
+      <div ref={ref} className={cx("relative", block && "w-full", className)}>
+        <Button
+          variant={block ? "primary" : "secondary"}
+          className={w}
+          loading={isPending}
+          onClick={() => (wallets.length === 1 ? connect({ connector: wallets[0], chainId: arcTestnet.id }) : setOpen((o) => !o))}
+        >
+          Connect wallet
+        </Button>
+        {open && (
+          <div className={cx("absolute z-50 mt-2 min-w-[220px] rounded-xl border border-line-strong bg-surface p-1.5 shadow-2xl", block ? "left-0 right-0" : "right-0")}>
+            {wallets.map((c) => (
+              <button
+                key={c.uid}
+                onClick={() => {
+                  setOpen(false);
+                  connect({ connector: c, chainId: arcTestnet.id });
+                }}
+                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-sm hover:bg-surface-2"
+              >
+                {c.icon ? <img src={c.icon} alt="" className="size-5 rounded" /> : <span className="size-5 rounded bg-surface-2" />}
+                {c.name}
+                {c.id === "io.metamask" && <span className="ml-auto text-[11px] text-fg-3">recommended</span>}
+              </button>
+            ))}
+            {!hasMetaMask && (
+              <a
+                href="https://metamask.io/download"
+                target="_blank"
+                rel="noreferrer"
+                className="mt-1 block border-t border-line px-3 pb-1 pt-2 text-xs text-fg-2 hover:text-fg"
+              >
+                Install MetaMask ↗
+              </a>
+            )}
+          </div>
+        )}
+      </div>
     );
   }
 
