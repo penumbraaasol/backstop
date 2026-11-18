@@ -54,7 +54,7 @@ app.get("/stats", async () => {
 
 app.get("/markets", async (req) => {
   const q = req.query as { category?: string; perSeries?: string };
-  return { markets: await curatedMarkets(q.category ?? "crypto", Number(q.perSeries ?? 3)) };
+  return { markets: await curatedMarkets(q.category ?? "all", Number(q.perSeries ?? 3)) };
 });
 
 const quoteBody = z.object({

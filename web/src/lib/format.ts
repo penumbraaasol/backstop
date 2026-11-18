@@ -21,8 +21,20 @@ export function countdown(seconds: number): string {
 export const localTime = (iso: string) =>
   new Date(iso).toLocaleString(undefined, { hour: "numeric", minute: "2-digit", month: "short", day: "numeric" });
 
-export const assetOf = (m: Pick<Market, "instrumentSymbol">) =>
-  /^GEMI-([A-Z]+?)(?:05M|15M|1H|\d)/.exec(m.instrumentSymbol)?.[1] ?? "";
+export const assetOf = (m: Pick<Market, "instrumentSymbol" | "asset">) =>
+  m.asset ?? /^GEMI-([A-Z]+?)(?:05M|15M|1H|\d)/.exec(m.instrumentSymbol)?.[1] ?? "";
+
+/** Readable asset name for sentences: "Gold", "Brent oil", or the ticker for crypto. */
+const nameOf = (m: Market) => (m.category === "crypto" ? assetOf(m) : (m.assetName ?? assetOf(m)));
+
+export const CATEGORY_LABEL: Record<string, string> = { crypto: "Crypto", commodities: "Commodities" };
+export const categoryLabel = (c: string) => CATEGORY_LABEL[c] ?? c.charAt(0).toUpperCase() + c.slice(1);
+
+/** "9:15 PM" for markets closing within a day, otherwise "Nov 20". */
+export const closeLabel = (iso: string) =>
+  new Date(iso).getTime() - Date.now() < 20 * 3600_000
+    ? new Date(iso).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })
+    : new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
 export type Horizon = "5m" | "15m" | "1h" | "later";
 export function horizonOf(m: Market): Horizon {
@@ -42,7 +54,7 @@ const money = (s: string) => `$${Number(s).toLocaleString("en-US", { maximumFrac
 
 /** Short human sentence for each side of a market. */
 export function sideText(m: Market, outcome: "yes" | "no"): string {
-  const asset = assetOf(m);
+  const asset = nameOf(m);
   if (m.strike) return outcome === "yes" ? `${asset} at or above ${money(m.strike)}` : `${asset} below ${money(m.strike)}`;
   // up/down windows that haven't opened yet have no strike: they compare against the opening price
   if (/^up$/i.test(m.label)) return outcome === "yes" ? `${asset} up from window open` : `${asset} down from window open`;
@@ -77,8 +89,8 @@ export const usdc = (n: number | string) => Number(n).toFixed(2);
 
 /** Full clause for sentences: "BTC is below $64,935.82 at 5:30 AM". */
 export function condition(m: Market, outcome: "yes" | "no"): string {
-  const asset = assetOf(m);
-  const at = timeOfDay(m.expiry);
+  const asset = nameOf(m);
+  const at = m.category === "crypto" ? timeOfDay(m.expiry) : `${closeLabel(m.expiry)}, ${timeOfDay(m.expiry)}`;
   if (m.strike)
     return outcome === "yes" ? `${asset} is at or above ${money(m.strike)} at ${at}` : `${asset} is below ${money(m.strike)} at ${at}`;
   if (/^up$/i.test(m.label))

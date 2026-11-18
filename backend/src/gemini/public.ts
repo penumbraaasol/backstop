@@ -41,6 +41,7 @@ export type GeminiEvent = {
   template?: string;
   termsLink?: string;
   eventTags?: { name: string; slug: string }[];
+  subcategory?: { name: string; slug: string } | null;
   contracts: GeminiContract[];
 };
 

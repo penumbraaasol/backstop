@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import type { Market, Outcome } from "@/lib/api";
-import { assetOf, countdown, HORIZONS, horizonOf, sideText, timeOfDay, type Horizon } from "@/lib/format";
+import { assetOf, categoryLabel, closeLabel, countdown, HORIZONS, horizonOf, sideText, type Horizon } from "@/lib/format";
 import { secondsLeft, useNow, usePriceTicks, type Tick } from "@/lib/hooks";
 import { cx, Ticker } from "./ui";
 
@@ -13,6 +13,8 @@ export function MarketPicker({
   loading,
   error,
   backendDown,
+  category,
+  setCategory,
   horizon,
   setHorizon,
   asset,
@@ -25,6 +27,8 @@ export function MarketPicker({
   loading: boolean;
   error: boolean;
   backendDown?: boolean;
+  category: string;
+  setCategory: (c: string) => void;
   horizon: Horizon;
   setHorizon: (h: Horizon) => void;
   asset: string;
@@ -35,16 +39,41 @@ export function MarketPicker({
 }) {
   const now = useNow();
   const ticks = usePriceTicks(markets);
-  const assets = useMemo(() => [...new Set((markets ?? []).map(assetOf))].filter(Boolean), [markets]);
-  const list = (markets ?? []).filter(
-    (m) => horizonOf(m) === horizon && (asset === "ALL" || assetOf(m) === asset) && secondsLeft(m, now) > 45,
+  const categories = useMemo(() => {
+    const c = new Map<string, number>();
+    for (const m of markets ?? []) c.set(m.category, (c.get(m.category) ?? 0) + 1);
+    return [...c.entries()].sort((a, b) => (a[0] === "crypto" ? -1 : b[0] === "crypto" ? 1 : b[1] - a[1]));
+  }, [markets]);
+  const inCategory = (markets ?? []).filter((m) => m.category === category);
+  const assets = [...new Set(inCategory.map(assetOf))].filter(Boolean);
+  const crypto = category === "crypto";
+  const list = inCategory.filter(
+    (m) => (!crypto || horizonOf(m) === horizon) && (asset === "ALL" || assetOf(m) === asset) && secondsLeft(m, now) > 45,
   );
 
   return (
-    <div className="rounded-lg border border-line bg-surface px-5 pb-4 pt-3">
+    <div className="rounded-lg border border-line bg-surface px-5 pb-4 pt-4">
+      {categories.length > 1 && (
+        <div className="mb-3 inline-flex rounded-md bg-surface-2 p-0.5" role="tablist" aria-label="Market category">
+          {categories.map(([c, n]) => (
+            <button
+              key={c}
+              role="tab"
+              aria-selected={category === c}
+              onClick={() => setCategory(c)}
+              className={cx(
+                "rounded-[5px] px-3 py-1 text-xs font-medium transition-colors",
+                category === c ? "bg-bg text-fg shadow-sm" : "text-fg-2 hover:text-fg",
+              )}
+            >
+              {categoryLabel(c)} <span className="num text-fg-3">{n}</span>
+            </button>
+          ))}
+        </div>
+      )}
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-line">
         <div className="flex gap-6" role="tablist">
-          {HORIZONS.map((h) => (
+          {(crypto ? HORIZONS : [{ id: horizon, label: "Daily price ladders" }]).map((h) => (
             <button
               key={h.id}
               role="tab"
@@ -182,7 +211,7 @@ function MarketRow({
           <Sparkline series={tick?.series} />
         </div>
         <div className="hidden text-right sm:block">
-          <p className="num text-sm text-fg">{timeOfDay(m.expiry)}</p>
+          <p className="num text-sm text-fg">{closeLabel(m.expiry)}</p>
           <p className={cx("num font-mono text-xs", left < 120 ? "text-warn" : "text-fg-2")}>in {countdown(left)}</p>
         </div>
         <div className="flex gap-1">

@@ -104,7 +104,7 @@ export async function suggestCover(message: string): Promise<Suggestion> {
   if (!cfg.GROK_API_KEY) throw new QuoteError("The cover assistant isn't configured on this server.", "assistant_off", 503);
 
   const [markets, maxPayoutRaw, freeRaw] = await Promise.all([
-    curatedMarkets("crypto", 3).catch(() => {
+    curatedMarkets("all", 3).catch(() => {
       throw new QuoteError("Gemini's market data isn't responding right now, so Grok can't see live prices. Try again shortly.", "markets_unavailable", 503);
     }),
     publicClient.readContract({ address: backstopAddress, abi: backstopAbi, functionName: "maxPayoutPerPolicy" }) as Promise<bigint>,

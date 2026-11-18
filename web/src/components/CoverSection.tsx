@@ -9,6 +9,7 @@ import { MarketPicker } from "./MarketPicker";
 
 export function CoverSection() {
   const { data: markets, isLoading, isError, error } = useMarkets();
+  const [category, setCategory] = useState("crypto");
   const [horizon, setHorizon] = useState<Horizon>("15m");
   const [asset, setAsset] = useState("ALL");
   const [symbol, setSymbol] = useState<string>();
@@ -22,9 +23,14 @@ export function CoverSection() {
     const open = (markets ?? []).filter((m) => secondsLeft(m, now) > 45);
     return (
       open.find((m) => m.instrumentSymbol === symbol) ??
-      open.find((m) => horizonOf(m) === horizon && (asset === "ALL" || assetOf(m) === asset))
+      open.find(
+        (m) =>
+          m.category === category &&
+          (category !== "crypto" || horizonOf(m) === horizon) &&
+          (asset === "ALL" || assetOf(m) === asset),
+      )
     );
-  }, [markets, symbol, horizon, asset]);
+  }, [markets, symbol, category, horizon, asset]);
 
   useEffect(() => {
     if (selected && selected.instrumentSymbol !== symbol) setSymbol(selected.instrumentSymbol);
@@ -40,6 +46,12 @@ export function CoverSection() {
               markets={markets}
               loading={isLoading}
               error={isError}
+              category={category}
+              setCategory={(c) => {
+                setCategory(c);
+                setAsset("ALL");
+                setSymbol(undefined);
+              }}
               backendDown={(error as { code?: string } | null)?.code === "offline"}
               horizon={horizon}
               setHorizon={(h) => {

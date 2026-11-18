@@ -355,5 +355,5 @@ export async function runWatches(markets: MarketView[]) {
 }
 
 export async function marketsForAgent() {
-  return curatedMarkets("crypto", 3);
+  return curatedMarkets("all", 3);
 }

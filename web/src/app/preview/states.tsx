@@ -207,6 +207,8 @@ export function PreviewStates() {
             markets={drifting}
             loading={false}
             error={false}
+            category="crypto"
+            setCategory={() => {}}
             horizon="15m"
             setHorizon={() => {}}
             asset="ALL"

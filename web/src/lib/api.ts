@@ -10,6 +10,8 @@ export type Market = {
   label: string;
   question: string;
   category: string;
+  asset?: string;
+  assetName?: string;
   series: string | null;
   kind: "5m" | "15m" | "other";
   startTime: string | null;
@@ -219,7 +221,7 @@ async function call<T>(path: string, init?: RequestInit): Promise<T> {
 export const api = {
   config: () => call<BackendConfig>("/config"),
   stats: () => call<Stats>("/stats"),
-  markets: () => call<{ markets: Market[] }>("/markets?perSeries=3").then((r) => r.markets),
+  markets: () => call<{ markets: Market[] }>("/markets?category=all&perSeries=3").then((r) => r.markets),
   policies: (address: string) => call<{ policies: PolicyTimeline[] }>(`/policies/${address}`).then((r) => r.policies),
   assist: (message: string) =>
     call<Suggestion>("/assist", {
