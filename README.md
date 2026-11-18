@@ -4,7 +4,14 @@
 
 > UBC 2026 Hackathon · Track: DeFi and Onchain Applications · Chain award: Best use of Arc · Bounty: Gemini Prediction Markets
 
-_Work in progress. This README is updated as each milestone lands._
+**Live app:** _added after deploy_ · **Demo video:** _added after recording_ · **Contract:** [`0x3c7c…4A05` on Arc testnet](https://explorer.testnet.arc.io/address/0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05)
+
+| | |
+|---|---|
+| **What** | Parametric event cover: pay a USDC premium onchain, receive N USDC if a real-world outcome happens. |
+| **Priced by** | Gemini Prediction Markets live order book: premium = N × (p + s). |
+| **Backed by** | A matching Gemini position bought for every policy. The prediction market is the oracle *and* the reinsurer. |
+| **Settled on** | Arc, Circle's L1 where USDC is the gas token and the settlement asset. |
 
 ## Repo layout
 
@@ -12,7 +19,62 @@ _Work in progress. This README is updated as each milestone lands._
 contracts/   Foundry project: Backstop.sol + tests + deploy script
 backend/     Node/TypeScript service: Gemini client, quote signer, hedger, resolver (M2)
 web/         Next.js app: market picker, live premium, buy flow, policy timeline
+Dockerfile   Backend container (Railway or any Docker host)
+DEMO.md      Demo video script
+SUBMISSION.md  Answers to the submission questions
 ```
+
+## Architecture
+
+```mermaid
+flowchart LR
+    U([Buyer wallet]) -->|1. pick market, outcome, N| W[Web app<br/>Next.js + wagmi]
+    W -->|2. POST /quote| B[Backend<br/>Fastify + viem]
+    B -->|best ask p| GP[(Gemini public API<br/>market data)]
+    B -->|3. EIP-712 signed quote| W
+    W -->|4. approve + buyPolicy| C{{Backstop.sol<br/>Arc testnet}}
+    C -->|locks N USDC from treasury| C
+    C -. PolicyPurchased event .-> B
+    B -->|5. buy N contracts| GT[(Gemini trading API<br/>sandbox / live)]
+    GT -. no fill .-> B
+    B -->|cancelAndRefund| C
+    GP -. 6. resolutionSide .-> B
+    B -->|7. resolveMarket + settle| C
+    C -->|8. N USDC payout| U
+```
+
+**Policy lifecycle**
+
+```mermaid
+sequenceDiagram
+    participant U as Buyer
+    participant W as Web app
+    participant B as Backend
+    participant C as Backstop.sol (Arc)
+    participant G as Gemini
+    U->>W: Choose market, YES/NO, payout N
+    W->>B: POST /quote
+    B->>G: Read best ask p
+    B-->>W: Quote{premium = N(p+s)} + EIP-712 signature (valid 60 s)
+    W->>C: USDC.approve, buyPolicy(quote, sig)
+    C-->>B: PolicyPurchased (indexer)
+    B->>G: Limit buy N contracts at <= p + slippage (fill-or-kill)
+    alt hedge filled
+        G-->>B: filled
+        Note over G: market expires
+        B->>G: GET event → resolutionSide
+        B->>C: resolveMarket(marketId, result), settle(policyId)
+        C->>U: N USDC if the covered outcome happened
+    else hedge not filled
+        B->>C: cancelAndRefund(policyId)
+        C->>U: premium refunded
+    end
+```
+
+Components:
+- **`contracts/`**: `Backstop.sol` holds the USDC treasury, verifies signed quotes, locks each payout, and settles. It trusts the backend for two things only (signing quotes and posting results), and both are bounded (see Risk assumptions).
+- **`backend/`**: one Node process with an HTTP API and three workers: indexer (Arc events → SQLite), hedger (Gemini orders) and resolver (Gemini results → Arc).
+- **`web/`**: a single-page app for picking a market, buying cover and tracking policies.
 
 ## Deployed contracts (Arc testnet, chain ID 5042002)
 
@@ -23,6 +85,19 @@ web/         Next.js app: market picker, live premium, buy flow, policy timeline
 
 Roles: owner `0x6D40a8B185B74574052c58Bb322618eE543a366b`, quote signer `0x87bCbF155ab2e4729D6eE7F2feff3a26600936C2`, resolver `0x91cD37e12d6dD26ac9c98af21d346DF9502C55b7`.
 Demo config: max payout 5 USDC per policy, max exposure 12 USDC per market, refund grace period 24 h, treasury seeded with 12 USDC (testnet faucet limits).
+
+## Verified on Arc testnet
+
+Every path has run end to end against the deployed contract:
+
+| Policy | Hedge | Result | Transaction |
+|---|---|---|---|
+| #1 | simulated fill | covered outcome happened → **paid out 2 USDC** | see contract history |
+| #2 | forced failure | hedge failed → **premium refunded** | see contract history |
+| #3 | **real Gemini sandbox order**: 2 YES filled at 0.43 on `GEMI-BTC2611170400-HI64400` | **paid out 2 USDC** | [`0x69f4…2af4b`](https://explorer.testnet.arc.io/tx/0x69f46ec1a9340f796aef8d6e5b3ed2cea0cc17547eee94e22c731f3a585af2b4) |
+| #4 | real Gemini sandbox fill-or-kill order, not filled (sandbox ask 0.97 > limit 0.12) | **premium refunded** | [`0xa571…e32c`](https://explorer.testnet.arc.io/tx/0xa571ad0977a4543ecb0169fadac198bf502328b72b0280ac25aac2884b3ce32c) |
+
+Treasury accounting checks out: 12 USDC seed + 1.06 + 1.12 premiums − 2 − 2 payouts = 10.18 USDC free, 0 locked.
 
 ## Smart contract
 
@@ -80,8 +155,12 @@ forge verify-contract $BACKSTOP_ADDRESS src/Backstop.sol:Backstop --chain-id 504
 
 ## How Backstop uses Arc
 
-- USDC is both the gas token and the settlement asset, so a buyer only ever needs one balance. Fees are predictable and denominated in dollars.
-- The contract uses the official Circle USDC ERC-20 at `0x3600…0000` (6 decimals). Arc's native gas balance is the same USDC at 18 decimals, so the app shows one USDC balance.
+- **USDC is the gas token and the settlement asset.** A buyer needs one balance, in dollars, for everything: the premium, the approval and the gas. There's no volatile gas token to buy first, which matters for an insurance product sold to non-crypto users.
+- **Official Circle USDC.** The contract holds and pays out the canonical USDC ERC-20 at `0x3600…0000` (6 decimals). Arc's native balance is the same USDC at 18 decimals, so the app shows a single balance.
+- **Predictable, dollar-denominated fees.** Gas is paid in USDC, so the cost of buying a $2 policy is known up front. This is what makes small, frequent, short-expiry cover (5- and 15-minute markets) viable.
+- **Fast finality fits short windows.** A policy on a 5-minute market has to be bought, indexed and hedged within seconds. On Arc, the purchase is confirmed and the hedge is placed well inside the quote's 60 s validity.
+- **The treasury is a USDC float on Arc.** Every open policy's payout is locked in the contract, and the operator can't withdraw locked funds. Payouts never depend on an offchain transfer arriving in time.
+- **Arc-specific engineering notes.** USDC ERC-20 calls go through a system precompile that Forge's local simulation can't execute (documented under Deploy). The web app adds Arc Testnet to the wallet automatically with USDC as the native currency.
 
 ## Economic design
 
@@ -172,3 +251,15 @@ cd web
 cp .env.example .env.local      # NEXT_PUBLIC_BACKSTOP_API, default http://localhost:8787
 corepack pnpm dev               # http://localhost:3000
 ```
+
+## Deployment
+
+| Part | Where | How |
+|---|---|---|
+| Contract | Arc testnet | `forge script` (see above) |
+| Backend | Railway (any Docker host works) | Root `Dockerfile`. Set the env vars from `.env.example` as service variables and mount a volume at `/data` for the SQLite index. |
+| Web | Vercel | Root directory `web/`, framework Next.js, env `NEXT_PUBLIC_BACKSTOP_API=<backend URL>` |
+
+Run **one** backend with workers at a time. Two backends with workers would both hedge and resolve the same policies. Set `RUN_WORKERS=false` on any extra API-only instance.
+
+Policy status can always be rebuilt from Arc events, starting at `BACKSTOP_DEPLOY_BLOCK`. Hedge records (Gemini order IDs and fills) exist only in SQLite, so keep it on a persistent volume.
