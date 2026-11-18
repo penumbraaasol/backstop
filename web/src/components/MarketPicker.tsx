@@ -153,9 +153,10 @@ export function MarketPicker({
           ))}
         </ul>
       )}
-      <p className="mt-3 text-xs text-fg-2">
-        Prices are Gemini&apos;s best ask, in USDC per 1 USDC of payout, refreshed every 5 seconds. The bar under each
-        market shows the implied odds: YES on the left, NO on the right.
+      <p className="mt-3 flex flex-wrap gap-x-4 font-mono text-[11px] text-fg-3">
+        <span>Gemini best ask · per $1 payout</span>
+        <span>bar: YES / NO odds</span>
+        <span>updates 5 s</span>
       </p>
     </div>
   );

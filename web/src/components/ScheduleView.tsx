@@ -87,17 +87,29 @@ export function ScheduleView(props: ScheduleProps) {
             </p>
           )}
           {wallet === "ready" && balance !== undefined && step !== "done" && (
-            <p className="num mt-2 text-xs text-fg-2">Wallet balance: {usdc(balance)} USDC (gas is also paid in USDC)</p>
+            <p className="num mt-2.5 flex justify-between text-xs">
+              <span className="text-fg-3">Balance</span>
+              <span className="font-mono text-fg-2">{usdc(balance)} USDC</span>
+            </p>
           )}
         </div>
       )}
 
       {market && (
-        <ul className="mt-5 space-y-1 border-t border-line pt-4 text-xs leading-relaxed text-fg-2">
-          <li>The price is fixed for 60 seconds once you press buy.</li>
-          <li>If the hedge order on Gemini doesn&apos;t fill, the premium is returned to you automatically.</li>
-          <li>Settled from Gemini&apos;s official result for this market, shortly after {timeOfDay(market.expiry)}.</li>
-        </ul>
+        <dl className="num mt-4 grid grid-cols-3 gap-3 border-t border-line pt-4 text-xs">
+          <div>
+            <dt className="text-fg-3">Price lock</dt>
+            <dd className="mt-0.5 font-mono text-fg-2">60 s</dd>
+          </div>
+          <div>
+            <dt className="text-fg-3">Settles</dt>
+            <dd className="mt-0.5 font-mono text-fg-2">{timeOfDay(market.expiry)}</dd>
+          </div>
+          <div>
+            <dt className="text-fg-3">Unhedged</dt>
+            <dd className="mt-0.5 font-mono text-fg-2">refunded</dd>
+          </div>
+        </dl>
       )}
     </section>
   );
@@ -189,7 +201,8 @@ function Filled(props: ScheduleProps & { market: Market }) {
             </button>
           </div>
           <span className="text-sm text-fg-2">USDC</span>
-          <span className="ml-auto flex gap-3 text-xs">
+          <span className="ml-auto flex items-center gap-3 text-xs">
+            <span className="font-mono text-fg-3">max {maxPayout}</span>
             {PRESETS.filter((x) => x <= maxPayout).map((x) => (
               <button
                 key={x}
@@ -202,7 +215,7 @@ function Filled(props: ScheduleProps & { market: Market }) {
             ))}
           </span>
         </div>
-        <p className="mt-1.5 text-xs text-fg-2">Testnet limit: {maxPayout} USDC per policy.</p>
+
       </Field>
 
       {/* the receipt */}
@@ -230,12 +243,7 @@ function Filled(props: ScheduleProps & { market: Market }) {
             This side costs more than it pays once the spread is added, so it can&apos;t be covered right now.
           </p>
         )}
-        {q.valid && (
-          <p className="num mt-1.5 text-xs text-fg-2">
-            {usdc(q.hedge)} buys {payout} {outcome.toUpperCase()} contracts on Gemini as the hedge. {usdc(q.margin)} is
-            the spread.
-          </p>
-        )}
+
       </div>
     </>
   );
@@ -272,7 +280,7 @@ function BuyButton({ market, outcome, payout, spread, now, balance, onBuy }: Sch
           Not enough USDC for this policy
         </Button>
         <p className="mt-2 text-xs text-fg-2">
-          Get testnet USDC from <ExtLink href={FAUCET_URL}>faucet.circle.com</ExtLink> (choose Arc Testnet).
+          Test USDC: <ExtLink href={FAUCET_URL}>faucet.circle.com</ExtLink>
         </p>
       </div>
     );
