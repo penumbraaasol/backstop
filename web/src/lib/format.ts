@@ -27,7 +27,7 @@ export const assetOf = (m: Pick<Market, "instrumentSymbol" | "asset">) =>
 /** Readable asset name for sentences: "Gold", "Brent oil", or the ticker for crypto. */
 const nameOf = (m: Market) => (m.category === "crypto" ? assetOf(m) : (m.assetName ?? assetOf(m)));
 
-export const CATEGORY_LABEL: Record<string, string> = { crypto: "Crypto", commodities: "Commodities" };
+export const CATEGORY_LABEL: Record<string, string> = { crypto: "Crypto", commodities: "Commodities", weather: "Weather", sports: "Sports" };
 export const categoryLabel = (c: string) => CATEGORY_LABEL[c] ?? c.charAt(0).toUpperCase() + c.slice(1);
 
 /** "9:15 PM" for markets closing within a day, otherwise "Nov 20". */
@@ -58,6 +58,8 @@ export function sideText(m: Market, outcome: "yes" | "no"): string {
   if (m.strike) return outcome === "yes" ? `${asset} at or above ${money(m.strike)}` : `${asset} below ${money(m.strike)}`;
   // up/down windows that haven't opened yet have no strike: they compare against the opening price
   if (/^up$/i.test(m.label)) return outcome === "yes" ? `${asset} up from window open` : `${asset} down from window open`;
+  if (m.category === "sports") return outcome === "yes" ? `${m.label} wins` : `${m.label} doesn't win`;
+  if (m.category === "weather") return outcome === "yes" ? `High of ${m.label}` : `High outside ${m.label}`;
   return outcome === "yes" ? m.label : `Not “${m.label}”`;
 }
 
@@ -95,5 +97,7 @@ export function condition(m: Market, outcome: "yes" | "no"): string {
     return outcome === "yes" ? `${asset} is at or above ${money(m.strike)} at ${at}` : `${asset} is below ${money(m.strike)} at ${at}`;
   if (/^up$/i.test(m.label))
     return outcome === "yes" ? `${asset} is up from its opening price at ${at}` : `${asset} is down from its opening price at ${at}`;
+  if (m.category === "sports") return outcome === "yes" ? `${m.label} wins (${m.title})` : `${m.label} doesn't win (${m.title})`;
+  if (m.category === "weather") return outcome === "yes" ? `the high is ${m.label} (${m.title.replace(/\?$/, "")})` : `the high is outside ${m.label} (${m.title.replace(/\?$/, "")})`;
   return outcome === "yes" ? `“${m.label}” happens` : `“${m.label}” doesn't happen`;
 }

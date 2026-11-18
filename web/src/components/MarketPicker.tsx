@@ -43,7 +43,9 @@ export function MarketPicker({
   const categories = useMemo(() => {
     const c = new Map<string, number>();
     for (const m of markets ?? []) c.set(m.category, (c.get(m.category) ?? 0) + 1);
-    return [...c.entries()].sort((a, b) => (a[0] === "crypto" ? -1 : b[0] === "crypto" ? 1 : b[1] - a[1]));
+    const order = ["crypto", "commodities", "weather", "sports"];
+    const rank = (k: string) => (order.indexOf(k) === -1 ? 99 : order.indexOf(k));
+    return [...c.entries()].sort((a, b) => rank(a[0]) - rank(b[0]));
   }, [markets]);
   const inCategory = (markets ?? []).filter((m) => m.category === category);
   const assets = [...new Set(inCategory.map(assetOf))].filter(Boolean);
@@ -74,7 +76,10 @@ export function MarketPicker({
       )}
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-line">
         <div className="flex gap-6" role="tablist">
-          {(crypto ? HORIZONS : [{ id: horizon, label: "Daily price ladders" }]).map((h) => (
+          {(crypto
+            ? HORIZONS
+            : [{ id: horizon, label: category === "sports" ? "Upcoming games" : category === "weather" ? "Daily high temperature" : "Daily price ladders" }]
+          ).map((h) => (
             <button
               key={h.id}
               role="tab"

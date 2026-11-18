@@ -8,7 +8,7 @@ import { cx } from "./ui";
 
 /** "≥ $64,250", "≥ $4,100", or "up" for windows without a strike yet. */
 function short(m: Market) {
-  if (!m.strike) return "up vs open";
+  if (!m.strike) return m.category === "crypto" ? "up vs open" : m.label;
   const n = Number(m.strike);
   return `≥ $${n.toLocaleString("en-US", { maximumFractionDigits: n < 10 ? 3 : 0 })}`;
 }

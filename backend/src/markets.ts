@@ -42,7 +42,9 @@ const NAMES: Record<string, string> = {
   BTC: "Bitcoin", ETH: "Ether", SOL: "Solana", XRP: "XRP", HYPE: "Hyperliquid", ZEC: "Zcash",
   XAU: "Gold", XAG: "Silver", BRENT: "Brent oil", WTI: "WTI oil", NGAS: "Natural gas", COPPER: "Copper",
 };
-const assetCode = (e: GeminiEvent) => /^([A-Z]+?)(?:05M|15M|1H|\d)/.exec(e.ticker)?.[1] ?? e.series ?? e.ticker;
+// BTC05M2611… → BTC, XAU2611… → XAU, NBA-2611…-HOU-IND-M → NBA, WXHIGH-AUS-… → WXHIGH
+const assetCode = (e: GeminiEvent) =>
+  e.ticker.includes("-") ? e.ticker.split("-")[0]! : (/^([A-Z]+?)(?:05M|15M|1H|\d)/.exec(e.ticker)?.[1] ?? e.series ?? e.ticker);
 
 function questionOf(e: GeminiEvent, c: GeminiContract, expiry: Date): string {
   const asset = assetCode(e);
@@ -88,7 +90,6 @@ export function toView(e: GeminiEvent, c: GeminiContract): MarketView | undefine
   };
 }
 
-let cache: { key: string; at: number; data: MarketView[] } | undefined;
 
 /** All active events across categories (paged; Gemini caps a page at 100). */
 async function allEvents(category?: string) {
@@ -110,15 +111,55 @@ async function allEvents(category?: string) {
 export async function curatedMarkets(category = "all", perSeries = 3): Promise<MarketView[]> {
   if (cfg.MOCK_MARKETS) return sampleMarkets(perSeries).filter((m) => category === "all" || m.category === category);
   const key = `${category}:${perSeries}`;
-  if (cache && cache.key === key && Date.now() - cache.at < 5_000) return cache.data;
+  const hit = cache.get(key);
+  const age = hit ? Date.now() - hit.at : Infinity;
+  // fresh: serve it. Recent: serve it and refresh in the background. Old or missing: wait for a refresh.
+  if (hit && age < 5_000) return hit.data;
+  if (hit && age < 120_000) {
+    void refresh(key, category, perSeries).catch(() => undefined);
+    return hit.data;
+  }
+  return refresh(key, category, perSeries);
+}
 
+const cache = new Map<string, { at: number; data: MarketView[] }>();
+const inflight = new Map<string, Promise<MarketView[]>>();
+
+function refresh(key: string, category: string, perSeries: number) {
+  const running = inflight.get(key);
+  if (running) return running;
+  const job = build(category, perSeries)
+    .then((data) => {
+      cache.set(key, { at: Date.now(), data });
+      return data;
+    })
+    .finally(() => inflight.delete(key));
+  inflight.set(key, job);
+  return job;
+}
+
+const SPORTS_GAMES = 48;
+const GAMES_PER_LEAGUE = 8;
+
+async function build(category: string, perSeries: number): Promise<MarketView[]> {
   const events = await allEvents(category === "all" ? undefined : category);
   const views: MarketView[] = [];
-  for (const e of events) {
+  let games = 0;
+  const perLeague = new Map<string, number>();
+  for (const e of [...events].sort((a, b) => (a.expiryDate ?? "").localeCompare(b.expiryDate ?? ""))) {
+    const sports = e.category.toLowerCase() === "sports";
+    // sports: only the "who wins" market per game (tickers ending -M), for the next few dozen games
+    const league = e.ticker.split("-")[0]!;
+    if (sports && (!e.ticker.endsWith("-M") || games >= SPORTS_GAMES || (perLeague.get(league) ?? 0) >= GAMES_PER_LEAGUE)) continue;
     const vs = (e.contracts ?? [])
       .map((c) => toView(e, c))
       .filter((v): v is MarketView => !!v && v.secondsToExpiry > cfg.MIN_SECONDS_TO_EXPIRY);
-    if (vs.length > 1) {
+    if (!vs.length) continue;
+    if (sports) {
+      games++;
+      perLeague.set(league, (perLeague.get(league) ?? 0) + 1);
+    }
+    if (vs.length > 1 && !sports) {
       // a ladder: keep the 4 strikes nearest the money
       vs.sort((a, b) => Math.abs(a.askYes - 0.5) - Math.abs(b.askYes - 0.5));
       views.push(...vs.slice(0, 4).sort((a, b) => Number(a.strike ?? 0) - Number(b.strike ?? 0)));
@@ -126,10 +167,11 @@ export async function curatedMarkets(category = "all", perSeries = 3): Promise<M
   }
   views.sort((a, b) => a.secondsToExpiry - b.secondsToExpiry);
 
-  // keep the next few windows (or dates) per series so the list stays short
+  // keep the next few windows (or dates) per series so the list stays short; sports are already capped
   const seen = new Map<string, Set<string>>();
-  const data = views.filter((v) => {
-    const s = v.series ?? v.eventTicker;
+  return views.filter((v) => {
+    if (v.category === "sports") return true;
+    const s = v.series ?? v.asset;
     const set = seen.get(s) ?? new Set<string>();
     seen.set(s, set);
     if (set.has(v.eventTicker)) return true;
@@ -137,8 +179,6 @@ export async function curatedMarkets(category = "all", perSeries = 3): Promise<M
     set.add(v.eventTicker);
     return true;
   });
-  cache = { key, at: Date.now(), data };
-  return data;
 }
 
 // --- development only: sample markets for when Gemini's public API is down -------------------
