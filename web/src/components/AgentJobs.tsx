@@ -223,9 +223,9 @@ function Feed({ events, now }: { events: AgentEvent[]; now: number }) {
       ) : (
         <ol className="min-h-0 flex-1 divide-y divide-line overflow-y-auto">
           {events.map((e) => (
-            <li key={e.id} className={cx("settle px-4 py-2", e.kind === "decision" && "bg-surface-2/60")}>
+            <li key={e.id} title={e.detail ?? undefined} className={cx("settle px-4 py-1.5", e.kind === "decision" && "bg-surface-2/60")}>
               <div className="flex items-baseline justify-between gap-3">
-                <p className="text-[13px] leading-snug">
+                <p className="truncate text-xs leading-snug">
                   {e.kind === "decision" ? (
                     <GrokMark className="mr-1.5 inline size-3.5 -translate-y-px align-middle" />
                   ) : (
@@ -233,13 +233,13 @@ function Feed({ events, now }: { events: AgentEvent[]; now: number }) {
                       {(KIND[e.kind] ?? KIND.scan).label}
                     </span>
                   )}
-                  <span className={cx("whitespace-pre-line", e.kind === "decision" && e.title.startsWith("Buy") && "font-medium text-up")}>{lines(e.title)}</span>
+                  <span className={cx(e.kind === "decision" && e.title.startsWith("Buy") && "font-medium text-up")}>{lines(e.title).replace(/\n/g, ", ")}</span>
                 </p>
                 <span className="num shrink-0 font-mono text-[11px] text-fg-3">{ago(e.at, now)}</span>
               </div>
               {(e.detail || e.url) && (
-                <p className={cx("mt-0.5 whitespace-pre-line text-xs", e.kind === "decision" ? "text-fg" : "text-fg-2")}>
-                  {e.detail && lines(e.detail)}
+                <p className={cx("mt-0.5 line-clamp-1 text-[11px] leading-snug", e.kind === "decision" ? "text-fg" : "text-fg-2")}>
+                  {e.detail && lines(e.detail).replace(/\n/g, " ")}
                   {e.url && (
                     <ExtLink href={e.url} className="ml-1.5 font-mono">
                       tx ↗

@@ -6,7 +6,7 @@ import { useConnection } from "wagmi";
 import type { PolicyTimeline } from "@/lib/api";
 import { publicClient } from "@/lib/chain";
 import { usdc } from "@/lib/format";
-import { useBackendConfig, usePolicies } from "@/lib/hooks";
+import { usePolicies } from "@/lib/hooks";
 import { ConnectButton, useMounted } from "./ConnectButton";
 import { PolicyEntry } from "./PolicyEntry";
 import { Eyebrow } from "./ui";
@@ -69,8 +69,6 @@ export function MyCover() {
           <PolicyList policies={policies} />
         )}
       </div>
-
-      <GrokBotPolicies />
     </section>
   );
 }
@@ -92,22 +90,6 @@ function PolicyList({ policies }: { policies: PolicyTimeline[] }) {
         </button>
       )}
     </>
-  );
-}
-
-/** Every policy the Grok Bot bought from its own wallet (the agent page shows only the latest). */
-function GrokBotPolicies() {
-  const { data: conf } = useBackendConfig();
-  const { data: policies } = usePolicies(conf?.agent ?? undefined);
-  if (!conf?.agent || !policies?.length) return null;
-  return (
-    <div id="grok" className="mt-20 scroll-mt-24">
-      <Eyebrow>Bought by Grok Bot</Eyebrow>
-      <h2 className="mt-3 text-lg font-semibold tracking-tight">The bot&apos;s policies</h2>
-      <div className="mt-8 space-y-12">
-        <PolicyList policies={policies} />
-      </div>
-    </div>
   );
 }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import Link from "next/link";
 import { api } from "@/lib/api";
 import { addressUrl } from "@/lib/chain";
 import { shortAddr } from "@/lib/format";
@@ -87,12 +86,7 @@ export function AgentSection() {
 
       {latest && (
         <div className="mt-14">
-          <div className="flex items-baseline justify-between gap-4">
-            <h3 className="text-sm font-semibold tracking-tight">Latest policy</h3>
-            <Link href="/cover#grok" className="text-xs text-fg-2 underline-offset-4 hover:text-fg hover:underline">
-              All Grok Bot policies →
-            </Link>
-          </div>
+          <h3 className="text-sm font-semibold tracking-tight">Latest policy</h3>
           <div className="mt-4">
             <TrackedPolicy p={latest} />
           </div>
