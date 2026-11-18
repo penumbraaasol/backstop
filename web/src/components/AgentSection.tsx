@@ -37,7 +37,9 @@ export function AgentSection() {
 
   // the demo shows working policies: refunded ones (hedge didn't fill) stay on-chain but off this page
   // only the latest policy that worked here; the full list lives on My cover
-  const latest = (policies ?? []).find((p) => p.status !== "refunded" && p.steps.hedged.status === "filled");
+  const latest =
+    (policies ?? []).find((p) => p.status === "paid_out") ??
+    (policies ?? []).find((p) => p.status === "active" && p.steps.hedged.status === "filled");
   const spent = Number(a.spentTodayUsdc);
   const budget = Number(a.dailyBudgetUsdc);
 

@@ -75,18 +75,20 @@ export function MyCover() {
   );
 }
 
+/** Active and paid-out policies up front; expired and refunded ones behind a toggle. */
 function PolicyList({ policies }: { policies: PolicyTimeline[] }) {
-  const [showRefunded, setShowRefunded] = useState(false);
-  const refunded = policies.filter((p) => p.status === "refunded").length;
-  const list = showRefunded ? policies : policies.filter((p) => p.status !== "refunded");
+  const [showPast, setShowPast] = useState(false);
+  const current = (p: PolicyTimeline) => p.status === "active" || p.status === "paid_out";
+  const past = policies.filter((p) => !current(p)).length;
+  const list = showPast ? policies : policies.filter(current);
   return (
     <>
       {list.map((p) => (
         <TrackedPolicy key={p.policyId} p={p} />
       ))}
-      {refunded > 0 && (
-        <button onClick={() => setShowRefunded((s) => !s)} className="text-xs text-fg-3 underline-offset-4 hover:text-fg hover:underline">
-          {showRefunded ? "Hide" : "Show"} {refunded} refunded {refunded === 1 ? "policy" : "policies"}
+      {past > 0 && (
+        <button onClick={() => setShowPast((s) => !s)} className="text-xs text-fg-3 underline-offset-4 hover:text-fg hover:underline">
+          {showPast ? "Hide" : "Show"} {past} past {past === 1 ? "policy" : "policies"}
         </button>
       )}
     </>
