@@ -16,7 +16,7 @@ export function useMounted() {
 
 export function ConnectButton({ className, block, compact }: { className?: string; block?: boolean; compact?: boolean }) {
   const mounted = useMounted();
-  const { address, isConnected } = useConnection();
+  const { address, isConnected, connector } = useConnection();
   const chainId = useChainId();
   const connectors = useConnectors();
   const { mutate: connect, isPending } = useConnect();
@@ -100,7 +100,14 @@ export function ConnectButton({ className, block, compact }: { className?: strin
         variant="secondary"
         className={cx("border-warn text-warn", w, className)}
         loading={switching}
-        onClick={() => switchChain({ chainId: arcTestnet.id })}
+        onClick={async () => {
+          // re-request access first: a remembered session may not be approved by this wallet yet
+          const provider = (await connector?.getProvider().catch(() => undefined)) as
+            | { request?: (a: { method: string }) => Promise<unknown> }
+            | undefined;
+          await provider?.request?.({ method: "eth_requestAccounts" }).catch(() => undefined);
+          switchChain({ chainId: arcTestnet.id });
+        }}
       >
         Switch to Arc Testnet
       </Button>

@@ -54,6 +54,8 @@ export function errorMessage(e: unknown): string {
   if (e instanceof ApiError) return e.message;
   if (e instanceof BaseError) {
     if (/User rejected|denied/i.test(e.shortMessage + e.details)) return "You rejected the request in your wallet.";
+    if (/not been authorized|unauthorized/i.test(e.shortMessage + e.details))
+      return "Your wallet hasn't approved this site yet. Disconnect, then connect again and approve it in the wallet.";
     return e.shortMessage;
   }
   return (e as Error)?.message ?? "Something went wrong.";
@@ -62,7 +64,7 @@ export function errorMessage(e: unknown): string {
 /** quote -> approve (if needed) -> buyPolicy -> receipt, with a visible step for each. */
 export function useBuyCover() {
   const qc = useQueryClient();
-  const { address } = useConnection();
+  const { address, connector } = useConnection();
   const chainId = useChainId();
   const { mutateAsync: switchChain } = useSwitchChain();
   const { mutateAsync: write } = useWriteContract();
@@ -84,6 +86,9 @@ export function useBuyCover() {
       setError(undefined);
       setResult(undefined);
       try {
+        // a remembered session can outlive the wallet's approval (e.g. after switching wallets): ask again first
+        const provider = (await connector?.getProvider()) as { request?: (a: { method: string }) => Promise<unknown> } | undefined;
+        await provider?.request?.({ method: "eth_requestAccounts" });
         if (chainId !== arcTestnet.id) {
           setStep("switch");
           await switchChain({ chainId: arcTestnet.id });
@@ -160,7 +165,7 @@ export function useBuyCover() {
         setStep("error");
       }
     },
-    [address, chainId, switchChain, write, qc],
+    [address, connector, chainId, switchChain, write, qc],
   );
 
   return { step, error, result, quoteExpiry, buy, reset };
