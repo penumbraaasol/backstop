@@ -233,7 +233,7 @@ function Steps({ steps }: { steps: ChatStep[] }) {
 }
 
 /** Just enough formatting for chat replies: paragraphs, "- " bullets, **bold**, `code`. */
-function Markdownish({ text }: { text: string }) {
+export function Markdownish({ text }: { text: string }) {
   const inline = (s: string): ReactNode[] =>
     s.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) =>
       part.startsWith("**") ? (
@@ -251,23 +251,41 @@ function Markdownish({ text }: { text: string }) {
   const FACT = /^\s*\*{0,2}([A-Z][A-Za-z ]{1,18}):\*{0,2}\s+(.+)$/;
   const BULLET = /^\s*([-*•]|\d+\.)\s+/;
   const clean = (t: string) => t.replace(/[ \t]+$/gm, "").replace(/\s+—\s+/g, ": ").trim();
-  const blocks = clean(text).split(/\n{2,}/);
+  // group lines into parts: headline, facts ("Label: value"), a label with bullets, or plain text
+  type Part = { kind: "head" | "facts" | "list" | "text"; label?: string; lines: string[] };
+  const parts: Part[] = [];
+  const all = clean(text).split("\n");
+  for (let n = 0; n < all.length; n++) {
+    const l = all[n].trim();
+    const last = parts[parts.length - 1];
+    if (!l) {
+      parts.push({ kind: "text", lines: [] }); // paragraph break
+      continue;
+    }
+    if (/^\*\*[^*]+\*\*$/.test(l)) parts.push({ kind: "head", lines: [l.slice(2, -2)] });
+    else if (BULLET.test(l)) {
+      if (last?.kind === "list") last.lines.push(l.replace(BULLET, ""));
+      else parts.push({ kind: "list", lines: [l.replace(BULLET, "")] });
+    } else if (/^\*{0,2}[A-Z][A-Za-z ]{1,18}:\*{0,2}$/.test(l) && BULLET.test(all[n + 1]?.trim() ?? ""))
+      parts.push({ kind: "list", label: l.replace(/\*\*/g, "").replace(/:$/, ""), lines: [] });
+    else if (FACT.test(l)) {
+      if (last?.kind === "facts") last.lines.push(l);
+      else parts.push({ kind: "facts", lines: [l] });
+    } else if (last?.kind === "text" && last.lines.length) last.lines.push(l);
+    else parts.push({ kind: "text", lines: [l] });
+  }
   return (
     <div className="space-y-3">
-      {blocks.map((b, i) => {
-        const lines = b.split("\n").filter((l) => l.trim());
-        // headline: a line that is bold from start to end
-        if (lines.length === 1 && /^\*\*[^*]+\*\*$/.test(lines[0].trim()))
-          return (
+      {parts
+        .filter((p) => p.lines.length)
+        .map((p, i) =>
+          p.kind === "head" ? (
             <p key={i} className="text-[15px] font-semibold tracking-tight text-fg">
-              {lines[0].trim().slice(2, -2)}
+              {inline(p.lines[0])}
             </p>
-          );
-        // facts: "Label: value" lines become an aligned two-column list
-        if (lines.length > 1 && lines.every((l) => FACT.test(l)))
-          return (
+          ) : p.kind === "facts" ? (
             <dl key={i} className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-1.5 rounded-2xl border border-line px-4 py-3 text-[13px]">
-              {lines.map((l, j) => {
+              {p.lines.map((l, j) => {
                 const [, k, v] = l.match(FACT)!;
                 return (
                   <Fragment key={j}>
@@ -277,34 +295,28 @@ function Markdownish({ text }: { text: string }) {
                 );
               })}
             </dl>
-          );
-        // "Why:" label followed by bullets in the same block
-        const head = lines.length > 1 && !BULLET.test(lines[0]) && lines.slice(1).every((l) => BULLET.test(l)) ? lines[0] : undefined;
-        const items = head ? lines.slice(1) : lines;
-        if (items.every((l) => BULLET.test(l)))
-          return (
+          ) : p.kind === "list" ? (
             <div key={i}>
-              {head && <p className="mb-1 text-[13px] font-medium text-fg-2">{inline(head.replace(/\*\*/g, ""))}</p>}
-              <ul className="space-y-1 pl-4">
-                {items.map((l, j) => (
+              {p.label && <p className="mb-1 text-[13px] font-medium text-fg-2">{p.label}</p>}
+              <ul className="space-y-1 pl-4 text-[13px]">
+                {p.lines.map((l, j) => (
                   <li key={j} className="list-disc marker:text-fg-3">
-                    {inline(l.replace(BULLET, ""))}
+                    {inline(l)}
                   </li>
                 ))}
               </ul>
             </div>
-          );
-        return (
-          <p key={i} className="text-fg-2">
-            {lines.map((l, j) => (
-              <Fragment key={j}>
-                {j > 0 && <br />}
-                {inline(l)}
-              </Fragment>
-            ))}
-          </p>
-        );
-      })}
+          ) : (
+            <p key={i} className="text-fg-2">
+              {p.lines.map((l, j) => (
+                <Fragment key={j}>
+                  {j > 0 && <br />}
+                  {inline(l)}
+                </Fragment>
+              ))}
+            </p>
+          ),
+        )}
     </div>
   );
 }
