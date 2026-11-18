@@ -85,6 +85,8 @@ class GeminiVenue implements HedgeVenue {
   }
 }
 
+export const simulatedVenue = () => new SimulatedVenue();
+
 export function makeVenue(): HedgeVenue {
   switch (cfg.HEDGE_MODE) {
     case "live":

@@ -135,19 +135,46 @@ export async function getSpot(asset: string): Promise<number | undefined> {
 // check the venue's ask first.
 const venueCache = new Map<string, { at: number; event: GeminiEvent }>();
 
-export async function venueAsk(instrumentSymbol: string, outcome: "yes" | "no", eventTicker?: string): Promise<number | undefined> {
-  if (cfg.HEDGE_MODE === "simulated") return undefined; // simulated hedges fill at the production ask
+/**
+ * Can the venue hedge this side near `quoted`? Sandbox mode only: a market the sandbox doesn't list at all
+ * (weather, sports, most commodities) is hedged on the simulated venue at the production price instead.
+ */
+export async function venueCanHedge(instrumentSymbol: string, outcome: "yes" | "no", quoted: number, eventTicker?: string) {
+  if (cfg.HEDGE_MODE === "simulated") return { ok: true, via: "simulated" as const, ask: quoted };
+  const listed = await venueListed(instrumentSymbol, eventTicker);
+  if (!listed && cfg.HEDGE_MODE === "sandbox") return { ok: true, via: "simulated" as const, ask: quoted };
+  const ask = await venueAsk(instrumentSymbol, outcome, eventTicker);
+  return { ok: ask !== undefined && ask <= quoted + cfg.MAX_SLIPPAGE, via: cfg.HEDGE_MODE, ask };
+}
+
+/** Listed on the venue with a live book (at least one side has an ask). An empty book means nobody trades it there. */
+export async function venueListed(instrumentSymbol: string, eventTicker?: string): Promise<boolean> {
+  if (cfg.HEDGE_MODE === "simulated") return false;
+  const ev = await venueEvent(eventTicker ?? eventTickerGuess(instrumentSymbol));
+  const c = ev?.contracts?.find((x) => x.instrumentSymbol === instrumentSymbol);
+  return !!c && (askFor(c, "yes") !== undefined || askFor(c, "no") !== undefined);
+}
+
+async function venueEvent(ticker: string | undefined): Promise<GeminiEvent | undefined> {
+  if (!ticker || cfg.HEDGE_MODE === "simulated") return undefined;
   const base = cfg.HEDGE_MODE === "sandbox" ? "https://api.sandbox.gemini.com" : cfg.GEMINI_PUBLIC_URL;
-  const ticker = eventTicker ?? eventTickerGuess(instrumentSymbol);
-  if (!ticker) return undefined;
   const key = `${base}|${ticker}`;
   let hit = venueCache.get(key);
   if (!hit || Date.now() - hit.at > 10_000) {
     const res = await fetch(`${base}/v1/prediction-markets/events/${encodeURIComponent(ticker)}`, { signal: AbortSignal.timeout(8_000) });
-    if (!res.ok) return undefined;
+    if (!res.ok) {
+      venueCache.set(key, { at: Date.now(), event: { contracts: [] } as unknown as GeminiEvent });
+      return undefined;
+    }
     hit = { at: Date.now(), event: (await res.json()) as GeminiEvent };
     venueCache.set(key, hit);
   }
-  const c = hit.event.contracts?.find((x) => x.instrumentSymbol === instrumentSymbol);
+  return hit.event;
+}
+
+export async function venueAsk(instrumentSymbol: string, outcome: "yes" | "no", eventTicker?: string): Promise<number | undefined> {
+  if (cfg.HEDGE_MODE === "simulated") return undefined; // simulated hedges fill at the production ask
+  const ev = await venueEvent(eventTicker ?? eventTickerGuess(instrumentSymbol));
+  const c = ev?.contracts?.find((x) => x.instrumentSymbol === instrumentSymbol);
   return c ? askFor(c, outcome) : undefined;
 }

@@ -233,6 +233,7 @@ function MarketRow({
               on={active && outcome === o}
               dir={o === "yes" ? tick?.yesDir : tick?.noDir}
               changed={!!(o === "yes" ? tick?.yesSeq : tick?.noSeq)}
+              hedgeable={m.hedgeable ? m.hedgeable[o] : true}
               onClick={(e) => {
                 e.stopPropagation();
                 onPick(m, o);
@@ -252,6 +253,7 @@ function PriceChip({
   on,
   dir,
   changed,
+  hedgeable,
   onClick,
 }: {
   side: Outcome;
@@ -259,12 +261,15 @@ function PriceChip({
   on: boolean;
   dir?: -1 | 0 | 1;
   changed: boolean;
+  hedgeable: boolean;
   onClick: (e: React.MouseEvent) => void;
 }) {
   const yes = side === "yes";
   return (
     <button
-      aria-label={`Cover ${side}, ${price.toFixed(2)} USDC per 1 USDC payout`}
+      aria-label={`Cover ${side}, ${price.toFixed(2)} USDC per 1 USDC payout${hedgeable ? "" : ", no hedge available"}`}
+      title={hedgeable ? undefined : "No hedge liquidity on Gemini for this side right now"}
+      disabled={!hedgeable}
       onClick={onClick}
       className={cx(
         "num relative w-[4.5rem] rounded-sm py-1.5 text-sm font-semibold transition-colors",
@@ -275,6 +280,7 @@ function PriceChip({
           : on
             ? "bg-down text-bg"
             : "bg-down/10 text-down hover:bg-down/20",
+        !hedgeable && "cursor-not-allowed opacity-35 hover:bg-transparent",
         changed && dir === 1 && "flash-up",
         changed && dir === -1 && "flash-down",
       )}

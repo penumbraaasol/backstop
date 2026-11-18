@@ -3,16 +3,20 @@
 import { cfg } from "./config.js";
 import { outcomeName, resolverWrite } from "./chain.js";
 import { db, now, type PolicyRow } from "./db.js";
-import { askFor, getContract } from "./gemini/public.js";
-import { makeVenue, priceStr, type HedgeVenue } from "./hedge/venue.js";
+import { askFor, getContract, venueListed } from "./gemini/public.js";
+import { makeVenue, priceStr, simulatedVenue, type HedgeVenue } from "./hedge/venue.js";
 
 const log = (...a: unknown[]) => console.log("[hedger]", ...a);
 const inFlight = new Set<number>();
 let venue: HedgeVenue | undefined;
 export const hedgeVenue = () => (venue ??= makeVenue());
 
+let simulated: HedgeVenue | undefined;
+
 export async function hedgePolicy(p: PolicyRow) {
-  const v = hedgeVenue();
+  // sandbox mode: markets the sandbox doesn't list (weather, sports, most commodities) hedge on the simulated venue
+  const listed = cfg.HEDGE_MODE === "sandbox" ? await venueListed(p.instrument_symbol, p.event_ticker).catch(() => true) : true;
+  const v = listed ? hedgeVenue() : (simulated ??= simulatedVenue());
   const outcome = outcomeName(p.outcome);
   const quantity = Number(BigInt(p.payout) / 1_000_000n);
 

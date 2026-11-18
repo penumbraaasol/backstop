@@ -14,7 +14,7 @@ import {
   type OutcomeName,
 } from "./chain.js";
 import { db, now } from "./db.js";
-import { askFor, contractExpiry, getContract, isTradable, venueAsk } from "./gemini/public.js";
+import { askFor, contractExpiry, getContract, isTradable, venueCanHedge } from "./gemini/public.js";
 
 export class QuoteError extends Error {
   constructor(
@@ -55,10 +55,10 @@ export async function makeQuote(req: QuoteRequest) {
   if (p == null) throw new QuoteError(`no ask for ${req.outcome.toUpperCase()} on Gemini`, "no_liquidity");
 
   // only sell cover we can hedge: the venue's ask must be within MAX_SLIPPAGE of the quoted price
-  const venue = await venueAsk(contract.instrumentSymbol, req.outcome, event.ticker).catch(() => undefined);
-  if (cfg.HEDGE_MODE !== "simulated" && (venue === undefined || venue > p + cfg.MAX_SLIPPAGE)) {
+  const venue = await venueCanHedge(contract.instrumentSymbol, req.outcome, p, event.ticker).catch(() => ({ ok: false, via: cfg.HEDGE_MODE, ask: undefined }));
+  if (!venue.ok) {
     throw new QuoteError(
-      `This side can't be hedged right now: the Gemini ${cfg.HEDGE_MODE} book asks ${venue?.toFixed(2) ?? "nothing"} vs ${p.toFixed(2)} quoted. Try another market.`,
+      `This side can't be hedged right now: the Gemini ${cfg.HEDGE_MODE} book asks ${venue.ask?.toFixed(2) ?? "nothing"} vs ${p.toFixed(2)} quoted. Try another market.`,
       "unhedgeable",
       409,
     );

@@ -21,7 +21,8 @@ export function CoverSection() {
   // keep the selected market fresh as prices refresh; fall back to the first match when it closes
   const selected = useMemo<Market | undefined>(() => {
     const now = Date.now();
-    const open = (markets ?? []).filter((m) => secondsLeft(m, now) > 45);
+    const canHedge = (m: Market) => !m.hedgeable || m.hedgeable.yes || m.hedgeable.no;
+    const open = (markets ?? []).filter((m) => secondsLeft(m, now) > 45).sort((a, b) => Number(canHedge(b)) - Number(canHedge(a)));
     return (
       open.find((m) => m.instrumentSymbol === symbol) ??
       open.find(
@@ -36,6 +37,15 @@ export function CoverSection() {
   useEffect(() => {
     if (selected && selected.instrumentSymbol !== symbol) setSymbol(selected.instrumentSymbol);
   }, [selected, symbol]);
+
+  // if the chosen side can't be hedged but the other can, switch to it
+  useEffect(() => {
+    const h = selected?.hedgeable;
+    if (!h || h[outcome]) return;
+    const other = outcome === "yes" ? "no" : "yes";
+    if (h[other]) setOutcome(other);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.instrumentSymbol, selected?.hedgeable?.yes, selected?.hedgeable?.no]);
 
   return (
     <>
@@ -78,6 +88,11 @@ export function CoverSection() {
               onPick={(m, o) => {
                 setSymbol(m.instrumentSymbol);
                 if (o) setOutcome(o);
+                // a row click keeps the side if it can be hedged, otherwise switches to the side that can
+                else if (m.hedgeable && !m.hedgeable[outcome]) {
+                  const other = outcome === "yes" ? "no" : "yes";
+                  if (m.hedgeable[other]) setOutcome(other);
+                }
               }}
             />
           </div>

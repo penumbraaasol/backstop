@@ -8,7 +8,7 @@
 import { agentAddress, agentBalance, agentEnabled, buyCover, dailyBudget, logEvent, spentToday } from "./agent.js";
 import { cfg } from "./config.js";
 import { db, kvGet, kvSet, now } from "./db.js";
-import { getSpot, venueAsk } from "./gemini/public.js";
+import { getSpot, venueCanHedge } from "./gemini/public.js";
 import type { MarketView } from "./markets.js";
 import { formatUsdc } from "./quotes.js";
 
@@ -173,10 +173,10 @@ async function buildCandidates(markets: MarketView[]) {
   lastValuation = valuation;
   // only cover we can hedge: check the venue's ask for the candidates that pass everything else
   for (const c of out.filter((x) => x.pass)) {
-    const v = await venueAsk(c.market.instrumentSymbol, "no", c.market.eventTicker).catch(() => undefined);
-    if (cfg.HEDGE_MODE !== "simulated" && (v === undefined || v > c.ask + cfg.MAX_SLIPPAGE)) {
+    const v = await venueCanHedge(c.market.instrumentSymbol, "no", c.ask, c.market.eventTicker).catch(() => ({ ok: false, ask: undefined }));
+    if (!v.ok) {
       c.pass = false;
-      c.why = `can't be hedged: Gemini ${cfg.HEDGE_MODE} book asks ${v?.toFixed(2) ?? "nothing"} vs ${c.ask.toFixed(2)}`;
+      c.why = `can't be hedged: Gemini ${cfg.HEDGE_MODE} book asks ${v.ask?.toFixed(2) ?? "nothing"} vs ${c.ask.toFixed(2)}`;
     }
   }
   return out.sort((a, b) => a.market.secondsToExpiry - b.market.secondsToExpiry);

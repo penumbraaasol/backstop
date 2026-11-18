@@ -27,6 +27,8 @@ export type MarketView = {
   strike: string | null;
   askYes: number;
   askNo: number;
+  /** can the backend hedge this side on its venue (sandbox/live) near the quoted price? */
+  hedgeable?: { yes: boolean; no: boolean };
   imageUrl: string | null;
   termsLink: string | null;
 };
@@ -92,6 +94,21 @@ export function toView(e: GeminiEvent, c: GeminiContract): MarketView | undefine
 
 
 /** All active events across categories (paged; Gemini caps a page at 100). */
+/** Asks on the hedge venue for every listed contract: one paged read of the venue's event list. */
+async function venueBook(): Promise<Map<string, { yes?: number; no?: number }> | undefined> {
+  if (cfg.HEDGE_MODE === "simulated") return undefined;
+  const base = cfg.HEDGE_MODE === "sandbox" ? "https://api.sandbox.gemini.com" : cfg.GEMINI_PUBLIC_URL;
+  const book = new Map<string, { yes?: number; no?: number }>();
+  for (let offset = 0; offset < 500; offset += 100) {
+    const res = await fetch(`${base}/v1/prediction-markets/events?status=active&limit=100&offset=${offset}`, { signal: AbortSignal.timeout(10_000) });
+    if (!res.ok) return undefined;
+    const page = ((await res.json()) as { data: GeminiEvent[] }).data ?? [];
+    for (const e of page) for (const c of e.contracts ?? []) book.set(c.instrumentSymbol, { yes: askFor(c, "yes"), no: askFor(c, "no") });
+    if (page.length < 100) break;
+  }
+  return book;
+}
+
 async function allEvents(category?: string) {
   const out: GeminiEvent[] = [];
   for (let offset = 0; offset < 500; offset += 100) {
@@ -142,7 +159,10 @@ const SPORTS_GAMES = 48;
 const GAMES_PER_LEAGUE = 8;
 
 async function build(category: string, perSeries: number): Promise<MarketView[]> {
-  const events = await allEvents(category === "all" ? undefined : category);
+  const [events, venue] = await Promise.all([
+    allEvents(category === "all" ? undefined : category),
+    venueBook().catch(() => undefined),
+  ]);
   const views: MarketView[] = [];
   let games = 0;
   const perLeague = new Map<string, number>();
@@ -166,6 +186,16 @@ async function build(category: string, perSeries: number): Promise<MarketView[]>
     } else views.push(...vs);
   }
   views.sort((a, b) => a.secondsToExpiry - b.secondsToExpiry);
+
+  if (venue) {
+    const ok = (venueAsk: number | undefined, quoted: number) => venueAsk !== undefined && venueAsk <= quoted + cfg.MAX_SLIPPAGE;
+    for (const v of views) {
+      const b = venue.get(v.instrumentSymbol);
+      // not listed on the sandbox at all: hedged on the simulated venue at the production price
+      const traded = !!b && (b.yes !== undefined || b.no !== undefined);
+      v.hedgeable = !traded && cfg.HEDGE_MODE === "sandbox" ? { yes: true, no: true } : { yes: ok(b?.yes, v.askYes), no: ok(b?.no, v.askNo) };
+    }
+  }
 
   // keep the next few windows (or dates) per series so the list stays short; sports are already capped
   const seen = new Map<string, Set<string>>();

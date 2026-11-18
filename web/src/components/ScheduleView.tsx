@@ -273,6 +273,13 @@ function BuyButton({ market, outcome, payout, spread, now, balance, onBuy }: Sch
   const q = previewPremium(payout, price, spread);
   const closed = (new Date(market.expiry).getTime() - now) / 1000 <= 45;
   const short = balance !== undefined && balance < q.premium + 0.02;
+  const unhedgeable = market.hedgeable ? !market.hedgeable[outcome] : false;
+  if (unhedgeable)
+    return (
+      <Button variant="secondary" className="w-full py-3" disabled>
+        No hedge available for {outcome.toUpperCase()} right now
+      </Button>
+    );
   if (short)
     return (
       <div>

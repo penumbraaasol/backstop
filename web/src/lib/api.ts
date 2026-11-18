@@ -20,6 +20,8 @@ export type Market = {
   strike: string | null;
   askYes: number;
   askNo: number;
+  /** whether the backend can hedge each side on its Gemini venue right now */
+  hedgeable?: { yes: boolean; no: boolean };
   imageUrl: string | null;
   termsLink: string | null;
 };
