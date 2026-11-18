@@ -7,8 +7,8 @@
  */
 @theme {
   /* type */
-  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
-  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-sans-face), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-sans-face), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
 
   --text-xs: 0.8125rem;   /* 13px */
@@ -66,9 +66,9 @@ body {
   background: rgb(255 255 255 / 0.18);
 }
 
-/* all money, odds and times line up in columns */
+/* figures: lining, proportional (Schibsted's tabular figures are very wide). Columns that must align use the mono face. */
 .num {
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums proportional-nums;
 }
 
 /* receipt rows: label, dotted leader, figure */
