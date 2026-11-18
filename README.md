@@ -2,7 +2,7 @@
 
 **Hedge a real-world event in one click.** Buy cover in USDC on Arc; Backstop prices it from Gemini's live prediction-market odds and hedges it by buying the matching Gemini contracts. If the event happens, the smart contract pays you.
 
-> UBC 2026 Hackathon · Track: DeFi and Onchain Applications · Chain award: Best use of Arc · Bounty: Gemini Prediction Markets
+> UBC 2026 Hackathon · Track: DeFi and Onchain Applications · Chain award: Best use of Arc · Bounties: Gemini Prediction Markets, Grok Bot
 
 **Live app:** _added after deploy_ · **Demo video:** _added after recording_ · **Contract:** [`0x3c7c…4A05` on Arc testnet](https://explorer.testnet.arc.io/address/0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05)
 
@@ -12,11 +12,17 @@
 | **Priced by** | Gemini Prediction Markets live order book: premium = N × (p + s). |
 | **Backed by** | A matching Gemini position bought for every policy. The prediction market is the oracle *and* the reinsurer. |
 | **Settled on** | Arc, Circle's L1 where USDC is the gas token and the settlement asset. |
+| **Run by** | A Grok agent with its own wallet that screens the markets and buys cover on its own, within hard limits. |
+
+## Grok's role
+
+Grok is Backstop's hedging agent: it holds its own Arc testnet wallet and buys cover with no human signature. In the chat ("protect my ETH against a drop in the next hour") it screens the live Gemini markets with tools, explains its pick and buys the policy onchain. On autopilot it reviews every screener finding against a valued portfolio and decides to buy or hold, with a short, numbers-based reason for each decision that is shown in the app's activity feed. The server enforces its limits and re-checks every pick, so Grok decides but can't exceed the per-policy cap, the daily budget or the hedge rules. A chat export is in [`docs/grok-agent-chat-export.md`](docs/grok-agent-chat-export.md).
 
 ## Repo layout
 
 ```
 contracts/   Foundry project: Backstop.sol + tests + deploy script
+docs/        Grok agent chat export
 backend/     Node/TypeScript service: Gemini client, quote signer, hedger, resolver (M2)
 web/         Next.js app: market picker, live premium, buy flow, policy timeline
 Dockerfile   Backend container (Railway or any Docker host)
@@ -83,7 +89,7 @@ Components:
 | USDC (ERC-20, 6 decimals, official Circle) | [`0x3600000000000000000000000000000000000000`](https://explorer.testnet.arc.io/address/0x3600000000000000000000000000000000000000) |
 | Backstop (verified source) | [`0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05`](https://explorer.testnet.arc.io/address/0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05) |
 
-Roles: owner `0x6D40a8B185B74574052c58Bb322618eE543a366b`, quote signer `0x87bCbF155ab2e4729D6eE7F2feff3a26600936C2`, resolver `0x91cD37e12d6dD26ac9c98af21d346DF9502C55b7`.
+Roles: owner `0x6D40a8B185B74574052c58Bb322618eE543a366b`, quote signer `0x87bCbF155ab2e4729D6eE7F2feff3a26600936C2`, resolver `0x91cD37e12d6dD26ac9c98af21d346DF9502C55b7`, Grok agent wallet [`0x4B0dE4147948fE97a1b53086F15C919348344F78`](https://explorer.testnet.arc.io/address/0x4B0dE4147948fE97a1b53086F15C919348344F78).
 Demo config: max payout 20 USDC per policy, max exposure 50 USDC per market, refund grace period 24 h. Treasury seeded with 12 USDC, topped up to about 95 USDC free liquidity on Nov 18 ([deposit tx](https://explorer.testnet.arc.io/tx/0xbcc5d985167dd9b9d7c78e0b76f14aea0dd56a7ae639e2be2930e291f1d5b16b), [caps tx](https://explorer.testnet.arc.io/tx/0xb159d532218c02a16bc2a4feeb68d59b847d3f129a9e1aa389faf0c467870314)).
 
 ## Verified on Arc testnet
@@ -96,6 +102,13 @@ Every path has run end to end against the deployed contract:
 | #2 | forced failure | hedge failed → **premium refunded** | see contract history |
 | #3 | **real Gemini sandbox order**: 2 YES filled at 0.43 on `GEMI-BTC2611170400-HI64400` | **paid out 2 USDC** | [`0x69f4…2af4b`](https://explorer.testnet.arc.io/tx/0x69f46ec1a9340f796aef8d6e5b3ed2cea0cc17547eee94e22c731f3a585af2b4) |
 | #4 | real Gemini sandbox fill-or-kill order, not filled (sandbox ask 0.97 > limit 0.12) | **premium refunded** | [`0xa571…e32c`](https://explorer.testnet.arc.io/tx/0xa571ad0977a4543ecb0169fadac198bf502328b72b0280ac25aac2884b3ce32c) |
+
+The Grok agent, buying from its own wallet:
+
+| Policy | How | Hedge | Transaction |
+|---|---|---|---|
+| #12 | **autopilot**: "Hedging 1% BTC drop… strike −0.22% of spot, 0.44 per $1 vs ~41% odds" | Gemini sandbox, 6 NO filled at 0.40 | [`0xd6ea…1bf65`](https://explorer.testnet.arc.io/tx/0xd6eae4df91f043615d7fbb3d937f2c85e0c56b26c6f42df181c2429e36bf1f65) |
+| #15 | **chat**: "protect my ETH against a drop in the next hour with about 3 USDC" | Gemini sandbox | [`0x0a6a…5af5e`](https://explorer.testnet.arc.io/tx/0x0a6ac9358536208f324d395050031d46589f7f19f684fbaac3c98e893b05af5e) |
 
 Treasury accounting checks out: 12 USDC seed + 1.06 + 1.12 premiums − 2 − 2 payouts = 10.18 USDC free, 0 locked.
 
@@ -261,6 +274,27 @@ cd web
 cp .env.example .env.local      # NEXT_PUBLIC_BACKSTOP_API, default http://localhost:8787
 corepack pnpm dev               # http://localhost:3000
 ```
+
+## Grok agent: decision loop and safety limits
+
+**Decision loop** (every 30 s, `backend/src/jobs.ts` → `autopilot.ts`):
+1. **Screen.** Read ~170 live Gemini markets; flag price moves ≥ 8¢, cheap cover (0.05–0.15) and new windows. Watch the agent's policies and the treasury on Arc.
+2. **Value the portfolio.** Hypothetical holdings (default 0.01 BTC, 0.3 ETH) at Gemini spot (`/v1/pubticker`).
+3. **Build candidates.** For each uncovered holding: crypto markets with a known strike, with strike vs spot, cost per $1 (ask + spread), implied odds, and a size equal to the loss on a 1% drop.
+4. **Filter by rules.** Downside cover only; strike −1.5% to +0.3% of spot; cost 0.12–0.60 per $1; ≥ 3 min left; hedgeable on the Gemini venue within 2¢.
+5. **Decide.** Grok (structured output) picks one candidate or holds, and must cite the numbers. Every decision is logged and shown in the app.
+6. **Re-check and buy.** The server re-validates the pick (size ≤ 1.5× suggested, asset not already covered, live price ≤ decided price + 2¢) and buys through the same signed-quote → `buyPolicy` path as a human.
+
+**Safety limits:** 10 USDC max payout per policy · 25 USDC of premiums per UTC day (refunds don't count) · balance check · one purchase at a time · one open policy per asset · at most one decision per 45 s · on/off switch (`AGENT_ENABLED`, and the autopilot toggle in the app) · chat purchases only on an explicit request, with a server-side guard that disables buying when the user says not to buy · the contract's own per-policy and per-market caps.
+
+## Technologies and sponsor tools
+
+- **Arc (Circle):** Arc testnet, USDC as gas and settlement, official USDC ERC-20, Arc explorer (Blockscout) for verification
+- **Gemini Prediction Markets:** market data and resolution (public API), trading on the sandbox via `@gemini-markets/sdk`, public ticker for spot prices
+- **Grok (xAI API):** `grok-4.20` with structured outputs and tool calling
+- **Contracts:** Solidity 0.8.24, Foundry, OpenZeppelin 5.1
+- **Backend:** Node 24, TypeScript, Fastify, viem, zod, SQLite
+- **Web:** Next.js 16, React 19, wagmi 3, viem, TanStack Query, Tailwind CSS 4
 
 ## Deployment
 

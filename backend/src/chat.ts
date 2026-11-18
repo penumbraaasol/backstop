@@ -19,7 +19,7 @@ import { cfg } from "./config.js";
 import { db } from "./db.js";
 import type { MarketView } from "./markets.js";
 import { formatUsdc, QuoteError } from "./quotes.js";
-import { setAutopilot } from "./autopilot.js";
+import { autopilotState, setAutopilot } from "./autopilot.js";
 
 export type Step = { tool: string; label: string; ok: boolean; detail?: string; url?: string; policyId?: number };
 
@@ -131,11 +131,14 @@ function system() {
     "Backstop sells parametric cover: a policy pays N USDC if an outcome of a Gemini prediction market happens. Premium = N × (ask + 0.03). Every policy is hedged on Gemini by the backend.",
     `You control your own testnet wallet (${agentAddress}). You can screen markets, check your on-chain status, buy cover, and run standing watches. Limits: max ${cfg.AGENT_MAX_PAYOUT} USDC payout per policy, ${cfg.AGENT_DAILY_BUDGET_USDC} USDC of premiums per day; the server enforces them.`,
     "Hedging logic: long an asset and afraid of a drop → NO on an 'at or above' / 'up' market. Short or waiting to buy and afraid of a rise → YES. Match the asset and time horizon. Prefer strikes near the money (asks 0.25–0.75) unless the user wants tail/crash cover.",
-    "Act directly when the user's intent to protect or buy is clear: call screen_markets, then call buy_cover in the same turn. Do not stop to describe what you are about to buy: a purchase only exists if you called buy_cover and it returned bought=true.",
+    "Buy only when the user's latest message clearly asks you to buy or protect them now (e.g. 'protect me', 'buy cover', 'hedge this'). Then call screen_markets and buy_cover in the same turn; a purchase only exists if buy_cover returned bought=true.",
+    "Questions ('which market would you use', 'what would it cost', 'should I') and anything saying don't buy / just explain / just tell me are advice only: screen and explain, never call buy_cover.",
     "If buy_cover fails, do not retry the same purchase in this turn. Explain the failure in plain words. Don't promise to retry later unless you started a watch that will; offer to start one instead.",
     "If the request is ambiguous (no asset, or it isn't about risk), ask one short question instead of buying.",
     "For recurring protection ('keep me covered', 'every window', 'whenever it's cheap'), prefer set_autopilot with a clear mandate: you then review every screener finding and decide yourself. Use start_watch only for a fixed mechanical rule.",
     "Never claim a purchase, watch or result that a tool didn't confirm. Quote real numbers from tool results: strike, time, premium, policy number.",
+    `Current time: ${new Date().toISOString()}. Market symbols encode the close time in UTC as YYMMDDHHMM, e.g. GEMI-BTC2611182200-HI63000 closes 2026-11-18 22:00 UTC; prefer the question text and closesInMin from tools.`,
+    "You also run an autopilot (agent_status shows its mandate, holdings and whether it is on). Mention it when asked what you're doing or watching.",
     "Style: concise, direct, a little dry wit is fine. Short paragraphs or a few bullets. No emojis, no hype. This is testnet money; say so if the user asks about real funds.",
   ].join("\n");
 }
@@ -216,6 +219,10 @@ async function runTool(name: string, rawArgs: string, steps: Step[], lastUserTex
             premium: formatUsdc(BigInt(p.premium as string)),
           })),
           watches: listWatches(),
+          autopilot: (() => {
+            const ap = autopilotState();
+            return { enabled: ap.enabled, mandate: ap.mandate, holdings: ap.holdings, lastDecisionAt: ap.lastDecisionAt };
+          })(),
         };
       }
       case "buy_cover": {
@@ -315,6 +322,9 @@ export const chatBody = z.object({
     .max(30),
 });
 
+/** The user said not to buy (or only asked for an explanation): purchases are off for this turn. */
+const NO_BUY = /\b(don'?t|do not|dont|no|without)\s+(buy|buying|purchas\w*)\b|\bjust (explain|tell|show|asking)\b|\bnot yet\b|\bhypothetical(ly)?\b/i;
+
 export async function chat(history: z.infer<typeof chatBody>["messages"]) {
   if (!agentEnabled()) throw new QuoteError("The Grok agent is switched off on this server.", "agent_off", 503);
   const lastUserText = [...history].reverse().find((m) => m.role === "user")?.content.slice(0, 300) ?? "";
@@ -338,7 +348,11 @@ export async function chat(history: z.infer<typeof chatBody>["messages"]) {
       return { reply: msg.content ?? "", steps, model: cfg.GROK_MODEL };
     }
     for (const call of msg.tool_calls) {
-      const result = await runTool(call.function.name, call.function.arguments, steps, lastUserText);
+      const result =
+        call.function.name === "buy_cover" && NO_BUY.test(lastUserText)
+          ? (steps.push({ tool: "buy_cover", ok: false, label: "Purchase skipped", detail: "You asked not to buy" }),
+            { error: "The user asked not to buy. Explain your recommendation instead." })
+          : await runTool(call.function.name, call.function.arguments, steps, lastUserText);
       messages.push({ role: "tool", tool_call_id: call.id, content: JSON.stringify(result) });
     }
   }
