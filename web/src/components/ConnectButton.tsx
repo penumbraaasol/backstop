@@ -37,13 +37,17 @@ export function ConnectButton({ className, block, compact }: { className?: strin
   if (!mounted) return <div className={cx("placeholder h-10 w-36", block && "w-full", className)} />;
 
   if (!isConnected) {
-    const injected = connectors[0];
+    // wallets announce themselves (EIP-6963): use MetaMask when it's installed, otherwise whatever wallet is there
+    const injected =
+      connectors.find((c) => c.id === "io.metamask" || /metamask/i.test(c.name)) ??
+      connectors.find((c) => c.id !== "injected") ??
+      connectors[0];
     const hasWallet = typeof window !== "undefined" && "ethereum" in window;
     if (!hasWallet)
       return (
-        <a href="https://rabby.io" target="_blank" rel="noreferrer" className={cx(block && "block", className)}>
+        <a href="https://metamask.io/download" target="_blank" rel="noreferrer" className={cx(block && "block", className)}>
           <Button variant="secondary" className={w}>
-            {block ? "Install a wallet to continue" : "Install a wallet"}
+            {block ? "Install MetaMask to continue" : "Install MetaMask"}
           </Button>
         </a>
       );

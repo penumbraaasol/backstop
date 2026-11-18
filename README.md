@@ -273,7 +273,7 @@ The e2e script picks the next priced BTC 5-minute market, gets a signed quote, a
 
 Design: a dark trading-app interface (Schibsted Grotesk and Geist Mono, hairline borders, green and red only for YES/NO and paid/failed states). All design tokens live in `web/src/app/globals.css`.
 
-Wallets: any injected wallet (MetaMask, Rabby). The app offers to add and switch to Arc Testnet. Test USDC comes from [faucet.circle.com](https://faucet.circle.com).
+Wallets: MetaMask (the app prefers it when several wallets are installed), or any other injected wallet. The app offers to add and switch to Arc Testnet. Test USDC comes from [faucet.circle.com](https://faucet.circle.com).
 
 ```bash
 cd web
