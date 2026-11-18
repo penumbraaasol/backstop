@@ -202,10 +202,10 @@ function AutopilotCard({ ap, now }: { ap: Autopilot; now: number }) {
 const KIND: Record<AgentEvent["kind"], { label: string; cls: string }> = {
   decision: { label: "Grok", cls: "text-fg" },
   action: { label: "Bought", cls: "text-up" },
-  onchain: { label: "On-chain", cls: "text-fg" },
-  finding: { label: "Finding", cls: "text-warn" },
-  scan: { label: "Screener", cls: "text-fg-2" },
-  watch: { label: "Watch", cls: "text-fg-2" },
+  onchain: { label: "On-chain", cls: "text-fg-3" },
+  finding: { label: "Finding", cls: "text-fg-3" },
+  scan: { label: "Screener", cls: "text-fg-3" },
+  watch: { label: "Watch", cls: "text-fg-3" },
   error: { label: "Failed", cls: "text-down" },
 };
 
@@ -229,7 +229,7 @@ function Feed({ events, now }: { events: AgentEvent[]; now: number }) {
                   {e.kind === "decision" ? (
                     <GrokMark className="mr-1.5 inline size-3.5 -translate-y-px align-middle" />
                   ) : (
-                    <span className={cx("mr-2 text-[10px] font-semibold uppercase tracking-[0.08em]", (KIND[e.kind] ?? KIND.scan).cls)}>
+                    <span className={cx("mr-1.5", (KIND[e.kind] ?? KIND.scan).cls)}>
                       {(KIND[e.kind] ?? KIND.scan).label}
                     </span>
                   )}
