@@ -1,8 +1,7 @@
 "use client";
 
-import { useBackendConfig } from "@/lib/hooks";
 import { ConnectButton } from "./ConnectButton";
-import { ArcLogo, GeminiLogo } from "./logos";
+import { ArcLogo, GeminiLogo, GrokLogo } from "./logos";
 import { Wordmark } from "./ui";
 
 const LINKS = [
@@ -13,7 +12,6 @@ const LINKS = [
 ];
 
 export function Nav() {
-  const { data: conf } = useBackendConfig();
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-[2px]">
       <nav className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-6 px-5 sm:px-8">
@@ -36,7 +34,9 @@ export function Nav() {
             <span className="mx-1 h-3 w-px bg-line-strong" />
             <span>Hedged on</span>
             <GeminiLogo className="h-3 w-auto text-fg" />
-            {conf && conf.hedgeMode !== "live" && <span className="text-fg-3">({conf.hedgeMode})</span>}
+            <span className="mx-1 h-3 w-px bg-line-strong" />
+            <span>Performed by</span>
+            <GrokLogo className="h-4 w-auto text-fg" />
           </p>
           <ConnectButton />
         </div>

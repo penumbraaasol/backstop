@@ -5,6 +5,7 @@ import { ArrowUp, Check, ChevronDown, X } from "lucide-react";
 import { Fragment, useEffect, useRef, useState, type ReactNode } from "react";
 import { api, type ChatMessage, type ChatStep } from "@/lib/api";
 import { errorMessage } from "@/lib/hooks";
+import { GrokMark } from "./logos";
 import { cx, ExtLink } from "./ui";
 
 const STARTERS = [
@@ -39,7 +40,9 @@ export function AgentChat({ seed }: { seed?: ChatMessage[] } = {}) {
     } catch {
       /* storage unavailable */
     }
-    scroller.current?.scrollTo({ top: scroller.current.scrollHeight, behavior: "smooth" });
+    // scroll only the chat box, and only when there is a conversation (never the page)
+    const el = scroller.current;
+    if (el && messages.length) el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   const send = useMutation({
@@ -78,7 +81,7 @@ export function AgentChat({ seed }: { seed?: ChatMessage[] } = {}) {
     <div className="flex h-[640px] flex-col overflow-hidden rounded-[22px] border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-5 py-3">
         <p className="flex items-center gap-2 text-sm font-semibold tracking-tight">
-          <span className="flex size-6 items-center justify-center rounded-full bg-fg text-[11px] font-bold text-bg">G</span>
+          <GrokMark className="size-5 text-fg" />
           Grok
           <span className="font-normal text-fg-3">· hedging agent</span>
         </p>

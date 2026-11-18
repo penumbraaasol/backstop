@@ -1,5 +1,5 @@
 import { addressUrl, BACKSTOP_ADDRESS, USDC_ADDRESS } from "@/lib/chain";
-import { ArcLogo, GeminiLogo } from "./logos";
+import { ArcLogo, GeminiLogo, GrokLogo } from "./logos";
 import { ExtLink, Wordmark } from "./ui";
 
 export function Footer() {
@@ -14,6 +14,7 @@ export function Footer() {
           <div className="mt-5 flex items-center gap-5 text-fg-2">
             <ArcLogo className="h-5 w-auto" />
             <GeminiLogo className="h-4 w-auto" />
+            <GrokLogo className="h-5 w-auto" />
           </div>
         </div>
         <dl className="grid gap-x-10 gap-y-3 text-sm sm:grid-cols-3">
