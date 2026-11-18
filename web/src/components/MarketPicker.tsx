@@ -36,9 +36,9 @@ export function MarketPicker({
   );
 
   return (
-    <div>
+    <div className="rounded-lg border border-line bg-surface px-5 pb-4 pt-3">
       {/* horizon: underlined text tabs */}
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-ink">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-line">
         <div className="flex gap-6" role="tablist">
           {HORIZONS.map((h) => (
             <button
@@ -48,7 +48,7 @@ export function MarketPicker({
               onClick={() => setHorizon(h.id)}
               className={cx(
                 "-mb-px border-b-2 pb-2.5 text-sm font-medium transition-colors",
-                horizon === h.id ? "border-ink text-ink" : "border-transparent text-ink-2 hover:text-ink",
+                horizon === h.id ? "border-line-strong text-fg" : "border-transparent text-fg-2 hover:text-fg",
               )}
             >
               {h.label}
@@ -62,7 +62,7 @@ export function MarketPicker({
               onClick={() => setAsset(a)}
               className={cx(
                 "font-mono",
-                asset === a ? "text-ink underline decoration-2 underline-offset-4" : "text-ink-2 hover:text-ink",
+                asset === a ? "text-fg underline decoration-2 underline-offset-4" : "text-fg-2 hover:text-fg",
               )}
             >
               {a === "ALL" ? "All" : a}
@@ -71,7 +71,7 @@ export function MarketPicker({
         </div>
       </div>
 
-      <div className="grid grid-cols-[1fr_auto] gap-4 border-b border-rule py-2 text-xs text-ink-2 sm:grid-cols-[1fr_6.5rem_auto]">
+      <div className="grid grid-cols-[1fr_auto] gap-4 border-b border-line py-2 text-xs text-fg-2 sm:grid-cols-[1fr_6.5rem_auto]">
         <span>Outcome</span>
         <span className="hidden text-right sm:block">Closes</span>
         <span className="flex gap-1">
@@ -83,7 +83,7 @@ export function MarketPicker({
       {loading && !markets ? (
         <ul>
           {Array.from({ length: 7 }).map((_, i) => (
-            <li key={i} className="flex items-center gap-3 border-b border-rule py-3.5">
+            <li key={i} className="flex items-center gap-3 border-b border-line py-3.5">
               <span className="placeholder h-5 w-12" />
               <span className="placeholder h-4 flex-1" />
               <span className="placeholder h-8 w-36" />
@@ -107,23 +107,23 @@ export function MarketPicker({
                   onClick={() => onPick(m)}
                   onKeyDown={(e) => e.key === "Enter" && onPick(m)}
                   className={cx(
-                    "grid cursor-pointer grid-cols-[1fr_auto] items-center gap-4 border-b border-rule py-3 pl-3 pr-1 transition-colors sm:grid-cols-[1fr_6.5rem_auto]",
-                    active ? "bg-paper-raised shadow-[inset_2px_0_0_0_var(--color-ink)]" : "hover:bg-paper-sunk/60",
+                    "grid cursor-pointer grid-cols-[1fr_auto] items-center gap-4 border-b border-line py-3 pl-3 pr-1 transition-colors sm:grid-cols-[1fr_6.5rem_auto]",
+                    active ? "bg-surface-2 shadow-[inset_2px_0_0_0_var(--color-fg)]" : "hover:bg-surface-2/60",
                   )}
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <Ticker asset={assetOf(m)} />
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-ink">{sideText(m, "yes")}</p>
-                      <p className="truncate text-xs text-ink-2">
+                      <p className="truncate text-sm font-medium text-fg">{sideText(m, "yes")}</p>
+                      <p className="truncate text-xs text-fg-2">
                         <span className="num font-mono sm:hidden">in {countdown(left)} · </span>
                         {m.title}
                       </p>
                     </div>
                   </div>
                   <div className="hidden text-right sm:block">
-                    <p className="num text-sm text-ink">{timeOfDay(m.expiry)}</p>
-                    <p className={cx("num font-mono text-xs", left < 120 ? "text-pending" : "text-ink-2")}>
+                    <p className="num text-sm text-fg">{timeOfDay(m.expiry)}</p>
+                    <p className={cx("num font-mono text-xs", left < 120 ? "text-warn" : "text-fg-2")}>
                       in {countdown(left)}
                     </p>
                   </div>
@@ -140,8 +140,14 @@ export function MarketPicker({
                             onPick(m, o);
                           }}
                           className={cx(
-                            "num w-[4.5rem] rounded-sm border py-1.5 font-serif text-md transition-colors",
-                            on ? "border-ink bg-ink text-paper" : "border-rule bg-paper-raised text-ink hover:border-ink",
+                            "num w-[4.5rem] rounded-sm py-1.5 text-sm font-semibold transition-colors",
+                            o === "yes"
+                              ? on
+                                ? "bg-up text-bg"
+                                : "bg-up/10 text-up hover:bg-up/20"
+                              : on
+                                ? "bg-down text-bg"
+                                : "bg-down/10 text-down hover:bg-down/20",
                           )}
                         >
                           {price.toFixed(2)}
@@ -155,7 +161,7 @@ export function MarketPicker({
           })}
         </ul>
       )}
-      <p className="mt-3 text-xs text-ink-2">
+      <p className="mt-3 text-xs text-fg-2">
         Prices are Gemini&apos;s current best ask, in USDC per 1 USDC of payout. They refresh every 5 seconds.
       </p>
     </div>
@@ -164,9 +170,9 @@ export function MarketPicker({
 
 function Note({ title, body }: { title: string; body: string }) {
   return (
-    <div className="border-b border-rule py-14 text-center">
-      <p className="font-serif text-md">{title}</p>
-      <p className="mt-1 text-sm text-ink-2">{body}</p>
+    <div className="border-b border-line py-14 text-center">
+      <p className="font-medium">{title}</p>
+      <p className="mt-1 text-sm text-fg-2">{body}</p>
     </div>
   );
 }

@@ -29,20 +29,20 @@ const PROTECTIONS = [
 
 export function HowItWorks() {
   return (
-    <section id="how" className="border-y border-rule bg-paper-raised">
+    <section id="how" className="border-y border-line bg-surface/60">
       <div className="mx-auto grid max-w-[1240px] gap-x-16 gap-y-14 px-5 py-20 sm:px-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
         <div>
           <Eyebrow>How it works</Eyebrow>
-          <h2 className="mt-2 max-w-lg font-serif text-xl font-medium">
+          <h2 className="mt-3 max-w-lg font-display text-xl font-semibold tracking-[-0.03em]">
             The prediction market sets the price and carries the risk.
           </h2>
           <ol className="mt-10">
             {STEPS.map((s, i) => (
-              <li key={s.title} className="grid grid-cols-[2.5rem_1fr] border-t border-rule py-5">
-                <span className="num font-serif text-lg text-ink-2">{i + 1}</span>
+              <li key={s.title} className="grid grid-cols-[2.5rem_1fr] border-t border-line py-5">
+                <span className="num font-display text-lg text-fg-2">{i + 1}</span>
                 <div>
                   <h3 className="font-medium">{s.title}</h3>
-                  <p className="mt-1 max-w-xl text-ink-2">{s.body}</p>
+                  <p className="mt-1 max-w-xl text-fg-2">{s.body}</p>
                 </div>
               </li>
             ))}
@@ -51,29 +51,29 @@ export function HowItWorks() {
 
         <div className="space-y-14 lg:pt-[5.5rem]">
           <div>
-            <h3 className="border-b-2 border-ink pb-2 font-serif text-lg font-semibold">Worked example</h3>
+            <h3 className="border-b border-line pb-3 font-display text-lg font-semibold tracking-tight">Worked example</h3>
             <div className="mt-4 space-y-1.5 text-sm">
               <Leader label="Payout (N)" value="100.00 USDC" />
               <Leader label="Gemini price (p)" value="× 0.27" />
               <Leader label="Spread (s)" value="+ 0.03" />
             </div>
-            <div className="mt-3 flex items-baseline justify-between border-t border-ink pt-3">
+            <div className="mt-3 flex items-baseline justify-between border-t border-line-strong pt-3">
               <span className="font-medium">Premium</span>
-              <span className="num font-serif text-lg font-medium">30.00 USDC</span>
+              <span className="num font-display text-lg font-medium">30.00 USDC</span>
             </div>
-            <p className="mt-3 text-sm text-ink-2">
+            <p className="mt-3 text-sm text-fg-2">
               27 USDC buys 100 contracts on Gemini. 3 USDC is the spread. If the event happens, the contracts pay
               100 USD, which covers the 100 USDC payout.
             </p>
           </div>
 
           <div>
-            <h3 className="border-b-2 border-ink pb-2 font-serif text-lg font-semibold">If something goes wrong</h3>
+            <h3 className="border-b border-line pb-3 font-display text-lg font-semibold tracking-tight">If something goes wrong</h3>
             <dl className="mt-1">
               {PROTECTIONS.map(([k, v]) => (
-                <div key={k} className="border-b border-rule py-3">
+                <div key={k} className="border-b border-line py-3">
                   <dt className="font-medium">{k}</dt>
-                  <dd className="mt-0.5 text-sm text-ink-2">{v}</dd>
+                  <dd className="mt-0.5 text-sm text-fg-2">{v}</dd>
                 </div>
               ))}
             </dl>

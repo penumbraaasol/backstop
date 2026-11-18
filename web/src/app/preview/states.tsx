@@ -136,7 +136,7 @@ export function PreviewStates() {
   return (
     <main className="mx-auto max-w-[1240px] px-5 py-12 sm:px-8">
       <Eyebrow>Design review</Eyebrow>
-      <h1 className="mt-2 font-serif text-xl">Every state, from fixed data</h1>
+      <h1 className="mt-2 font-display text-xl">Every state, from fixed data</h1>
       <div className="mt-6 max-w-md space-y-1.5 text-sm">
         <Leader label="Ink on paper" value="#1a1916 / #f5f2ea" />
         <Leader label="Accent" value="#1e5b3e" />
@@ -164,7 +164,7 @@ export function PreviewStates() {
 function Frame({ name, children }: { name: string; children: ReactNode }) {
   return (
     <div data-state={name}>
-      <p className="mb-3 font-mono text-xs text-ink-2">{name}</p>
+      <p className="mb-3 font-mono text-xs text-fg-2">{name}</p>
       {children}
     </div>
   );

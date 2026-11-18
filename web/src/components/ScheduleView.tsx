@@ -39,25 +39,25 @@ export function ScheduleView(props: ScheduleProps) {
   const { wallet, balance, step, error, result, quoteExpiry, onBuy, onReset, connectSlot } = props;
 
   return (
-    <section aria-label="Policy schedule" className="border-t-2 border-ink">
+    <section aria-label="Policy schedule" className="rounded-lg border border-line bg-surface px-5 pb-5">
       <div className="flex items-baseline justify-between pb-2.5 pt-3">
-        <h2 className="font-serif text-lg font-semibold">Policy schedule</h2>
-        <span className="font-mono text-xs text-ink-2">
+        <h2 className="font-display text-md font-semibold tracking-tight">Your cover</h2>
+        <span className="font-mono text-xs text-fg-2">
           {result ? `No. ${result.policyId}` : "Draft"}
         </span>
       </div>
 
       {!market ? (
         marketsLoading ? (
-          <div className="space-y-3 border-t border-rule py-6">
+          <div className="space-y-3 border-t border-line py-6">
             <div className="placeholder h-5 w-3/4" />
             <div className="placeholder h-16" />
             <div className="placeholder h-24" />
           </div>
         ) : (
-          <div className="border-t border-rule py-12">
-            <p className="font-serif text-md">Choose a market to start.</p>
-            <p className="mt-1 text-sm text-ink-2">
+          <div className="border-t border-line py-12">
+            <p className="font-medium">Choose a market to start.</p>
+            <p className="mt-1 text-sm text-fg-2">
               Pick a row in the table, then the YES or NO price for the outcome that should pay you.
             </p>
           </div>
@@ -67,7 +67,7 @@ export function ScheduleView(props: ScheduleProps) {
       )}
 
       {market && (
-        <div className="border-t border-rule pt-3">
+        <div className="border-t border-line pt-3">
           {wallet === "loading" ? (
             <div className="placeholder h-12" />
           ) : wallet !== "ready" ? (
@@ -80,18 +80,18 @@ export function ScheduleView(props: ScheduleProps) {
             <BuyButton {...props} market={market} />
           )}
           {error && step === "error" && (
-            <p role="alert" className="mt-3 border-l-2 border-danger pl-3 text-sm text-danger">
+            <p role="alert" className="mt-3 border-l-2 border-down pl-3 text-sm text-down">
               {error}
             </p>
           )}
           {wallet === "ready" && balance !== undefined && step !== "done" && (
-            <p className="num mt-2 text-xs text-ink-2">Wallet balance: {usdc(balance)} USDC (gas is also paid in USDC)</p>
+            <p className="num mt-2 text-xs text-fg-2">Wallet balance: {usdc(balance)} USDC (gas is also paid in USDC)</p>
           )}
         </div>
       )}
 
       {market && (
-        <ul className="mt-5 space-y-1 border-t border-rule pt-4 text-xs leading-relaxed text-ink-2">
+        <ul className="mt-5 space-y-1 border-t border-line pt-4 text-xs leading-relaxed text-fg-2">
           <li>The price is fixed for 60 seconds once you press buy.</li>
           <li>If the hedge order on Gemini doesn&apos;t fill, the premium is returned to you automatically.</li>
           <li>Settled from Gemini&apos;s official result for this market, shortly after {timeOfDay(market.expiry)}.</li>
@@ -112,9 +112,9 @@ function Filled(props: ScheduleProps & { market: Market }) {
     <>
       <Field label="Event">
         <p className="font-medium">{market.title}</p>
-        <p className="num text-xs text-ink-2">
+        <p className="num text-xs text-fg-2">
           Closes {timeOfDay(market.expiry)} ·{" "}
-          <span className={cx("font-mono", left < 120 && "text-pending")}>in {countdown(left)}</span>
+          <span className={cx("font-mono", left < 120 && "text-warn")}>in {countdown(left)}</span>
         </p>
       </Field>
 
@@ -132,20 +132,20 @@ function Filled(props: ScheduleProps & { market: Market }) {
                 onClick={() => setOutcome(o)}
                 className={cx(
                   "flex items-center gap-3 rounded-sm border px-3 py-2 text-left transition-colors",
-                  on ? "border-ink bg-paper-raised" : "border-rule hover:border-ink-3",
+                  on ? "border-fg-3 bg-surface-2" : "border-line hover:border-line-strong",
                 )}
               >
                 <span
                   className={cx(
                     "flex size-4 shrink-0 items-center justify-center rounded-full border",
-                    on ? "border-ink bg-ink" : "border-ink-3",
+                    on ? "border-line-strong bg-fg" : "border-fg-3",
                   )}
                 >
-                  {on && <span className="size-1.5 rounded-full bg-paper" />}
+                  {on && <span className="size-1.5 rounded-full bg-bg" />}
                 </span>
-                <span className="w-8 text-xs font-semibold uppercase tracking-[0.08em]">{o}</span>
+                <span className={cx("w-8 text-xs font-semibold uppercase tracking-[0.08em]", o === "yes" ? "text-up" : "text-down")}>{o}</span>
                 <span className="flex-1 text-sm">{sideText(market, o)}</span>
-                <span className="num font-mono text-xs text-ink-2">{p.toFixed(2)}</span>
+                <span className="num font-mono text-xs text-fg-2">{p.toFixed(2)}</span>
               </button>
             );
           })}
@@ -154,12 +154,12 @@ function Filled(props: ScheduleProps & { market: Market }) {
 
       <Field label="Payout">
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center rounded-sm border border-rule bg-paper-raised focus-within:border-ink">
+          <div className="flex items-center rounded-sm border border-line-strong bg-surface-2 focus-within:border-fg-3">
             <button
               aria-label="Decrease payout"
               disabled={busy || payout <= 1}
               onClick={() => setPayout(Math.max(1, payout - 1))}
-              className="px-2.5 py-2 text-ink-2 hover:text-ink disabled:opacity-30"
+              className="px-2.5 py-2 text-fg-2 hover:text-fg disabled:opacity-30"
             >
               <Minus className="size-3.5" />
             </button>
@@ -175,48 +175,48 @@ function Filled(props: ScheduleProps & { market: Market }) {
                 const v = Math.floor(Number(e.target.value));
                 if (!Number.isNaN(v)) setPayout(Math.min(Math.max(1, v), maxPayout));
               }}
-              className="num w-12 bg-transparent text-center font-serif text-lg outline-none"
+              className="num w-12 bg-transparent text-center text-lg font-semibold outline-none"
             />
             <button
               aria-label="Increase payout"
               disabled={busy || payout >= maxPayout}
               onClick={() => setPayout(Math.min(maxPayout, payout + 1))}
-              className="px-2.5 py-2 text-ink-2 hover:text-ink disabled:opacity-30"
+              className="px-2.5 py-2 text-fg-2 hover:text-fg disabled:opacity-30"
             >
               <Plus className="size-3.5" />
             </button>
           </div>
-          <span className="text-sm text-ink-2">USDC</span>
+          <span className="text-sm text-fg-2">USDC</span>
           <span className="ml-auto flex gap-3 text-xs">
             {PRESETS.filter((x) => x <= maxPayout).map((x) => (
               <button
                 key={x}
                 disabled={busy}
                 onClick={() => setPayout(x)}
-                className={cx("num font-mono", payout === x ? "text-ink underline underline-offset-4" : "text-ink-2 hover:text-ink")}
+                className={cx("num font-mono", payout === x ? "text-fg underline underline-offset-4" : "text-fg-2 hover:text-fg")}
               >
                 {x}
               </button>
             ))}
           </span>
         </div>
-        <p className="mt-1.5 text-xs text-ink-2">Testnet limit: {maxPayout} USDC per policy.</p>
+        <p className="mt-1.5 text-xs text-fg-2">Testnet limit: {maxPayout} USDC per policy.</p>
       </Field>
 
       {/* the receipt */}
-      <div className="border-t border-ink py-3">
+      <div className="border-t border-line-strong py-3">
         <div className="space-y-1.5 text-sm">
           <Leader label="Payout" value={`${usdc(payout)} USDC`} />
           <Leader label={`Gemini price, ${outcome.toUpperCase()}`} value={`× ${price.toFixed(2)}`} />
           <Leader label="Backstop spread" value={`+ ${spread.toFixed(2)}`} />
         </div>
-        <div className="mt-3 flex items-baseline justify-between gap-4 border-t border-ink pt-3">
+        <div className="mt-3 flex items-baseline justify-between gap-4 border-t border-line-strong pt-3">
           <span className="text-sm font-medium">You pay</span>
-          <span className="num font-serif text-xl font-medium">
-            {q.valid ? usdc(q.premium) : "—"} <span className="text-md text-ink-2">USDC</span>
+          <span className="num font-display text-xl font-semibold tracking-[-0.03em]">
+            {q.valid ? usdc(q.premium) : "—"} <span className="text-md text-fg-2">USDC</span>
           </span>
         </div>
-        <p className="num mt-1 text-right font-mono text-xs text-ink-2">
+        <p className="num mt-1 text-right font-mono text-xs text-fg-2">
           {payout} × ({price.toFixed(2)} + {spread.toFixed(2)}) = {usdc(q.premium)}
         </p>
         {q.valid ? (
@@ -224,12 +224,12 @@ function Filled(props: ScheduleProps & { market: Market }) {
             You pay <b className="num font-semibold">{usdc(q.premium)} USDC</b>. If {condition(market, outcome)}, you get <b className="num font-semibold">{usdc(payout)} USDC</b>.
           </p>
         ) : (
-          <p className="mt-4 text-sm text-ink-2">
+          <p className="mt-4 text-sm text-fg-2">
             This side costs more than it pays once the spread is added, so it can&apos;t be covered right now.
           </p>
         )}
         {q.valid && (
-          <p className="num mt-1.5 text-xs text-ink-2">
+          <p className="num mt-1.5 text-xs text-fg-2">
             {usdc(q.hedge)} buys {payout} {outcome.toUpperCase()} contracts on Gemini as the hedge. {usdc(q.margin)} is
             the spread.
           </p>
@@ -241,8 +241,8 @@ function Filled(props: ScheduleProps & { market: Market }) {
 
 function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-[5.5rem_1fr] gap-3 border-t border-rule py-2.5">
-      <span className="pt-0.5 text-xs text-ink-2">{label}</span>
+    <div className="grid grid-cols-[5.5rem_1fr] gap-3 border-t border-line py-2.5">
+      <span className="pt-0.5 text-xs text-fg-2">{label}</span>
       <div className="min-w-0">{children}</div>
     </div>
   );
@@ -251,7 +251,7 @@ function Field({ label, children }: { label: string; children: ReactNode }) {
 export function Leader({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   return (
     <div className="leader">
-      <span className={cx(strong ? "font-medium" : "text-ink-2")}>{label}</span>
+      <span className={cx(strong ? "font-medium" : "text-fg-2")}>{label}</span>
       <span className="dots" />
       <span className={cx("num font-mono", strong && "font-medium")}>{value}</span>
     </div>
@@ -269,7 +269,7 @@ function BuyButton({ market, outcome, payout, spread, now, balance, onBuy }: Sch
         <Button variant="secondary" className="w-full py-3" disabled>
           Not enough USDC for this policy
         </Button>
-        <p className="mt-2 text-xs text-ink-2">
+        <p className="mt-2 text-xs text-fg-2">
           Get testnet USDC from <ExtLink href={FAUCET_URL}>faucet.circle.com</ExtLink> (choose Arc Testnet).
         </p>
       </div>
@@ -293,25 +293,25 @@ export function Progress({ step, quoteExpiry, now }: { step: BuyStep; quoteExpir
   const ttl = quoteExpiry ? Math.max(0, Math.floor((quoteExpiry - now) / 1000)) : null;
   return (
     <div aria-live="polite">
-      {step === "switch" && <p className="mb-2 text-sm text-pending">Switch your wallet to Arc Testnet to continue.</p>}
+      {step === "switch" && <p className="mb-2 text-sm text-warn">Switch your wallet to Arc Testnet to continue.</p>}
       <ol className="text-sm">
         {STEPS.map((s, i) => {
           const done = i < idx;
           const cur = i === idx;
           return (
-            <li key={s.id} className="flex items-center gap-3 border-b border-rule py-2.5 last:border-b-0">
+            <li key={s.id} className="flex items-center gap-3 border-b border-line py-2.5 last:border-b-0">
               <span
                 className={cx(
                   "flex size-5 shrink-0 items-center justify-center rounded-full text-[11px]",
-                  done && "settle bg-ink text-paper",
-                  cur && "text-ink",
-                  !done && !cur && "border border-rule text-ink-3",
+                  done && "settle bg-fg text-bg",
+                  cur && "text-fg",
+                  !done && !cur && "border border-line text-fg-3",
                 )}
               >
                 {done ? <Check className="size-3" strokeWidth={3} /> : cur ? <Spinner /> : i + 1}
               </span>
-              <span className={cx(cur || done ? "text-ink" : "text-ink-3", cur && "font-medium")}>{s.label}</span>
-              <span className="num ml-auto font-mono text-xs text-ink-2">
+              <span className={cx(cur || done ? "text-fg" : "text-fg-3", cur && "font-medium")}>{s.label}</span>
+              <span className="num ml-auto font-mono text-xs text-fg-2">
                 {s.id === "quote" && done && ttl !== null ? `price held ${ttl}s` : cur ? s.hint : ""}
               </span>
             </li>
@@ -325,8 +325,8 @@ export function Progress({ step, quoteExpiry, now }: { step: BuyStep; quoteExpir
 function Issued({ result, onReset }: { result: BuyResult; onReset: () => void }) {
   return (
     <div className="settle">
-      <p className="flex items-center gap-2 text-sm font-medium text-accent">
-        <span className="flex size-5 items-center justify-center rounded-full bg-accent text-accent-ink">
+      <p className="flex items-center gap-2 text-sm font-medium text-up">
+        <span className="flex size-5 items-center justify-center rounded-full bg-up text-primary-fg">
           <Check className="size-3" strokeWidth={3} />
         </span>
         Policy No. {result.policyId} issued
@@ -340,10 +340,10 @@ function Issued({ result, onReset }: { result: BuyResult; onReset: () => void })
         <a href="#policies" className="font-medium underline underline-offset-4">
           Track this policy ↓
         </a>
-        <ExtLink href={txUrl(result.txHash)} className="text-ink-2">
+        <ExtLink href={txUrl(result.txHash)} className="text-fg-2">
           Purchase transaction ↗
         </ExtLink>
-        <button onClick={onReset} className="ml-auto text-ink-2 hover:text-ink">
+        <button onClick={onReset} className="ml-auto text-fg-2 hover:text-fg">
           Buy another
         </button>
       </div>

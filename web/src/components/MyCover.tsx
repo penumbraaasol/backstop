@@ -41,8 +41,8 @@ export function MyCover() {
       <div className="flex flex-wrap items-end justify-between gap-6">
         <div>
           <Eyebrow>My policies</Eyebrow>
-          <h2 className="mt-2 font-serif text-xl font-medium">Every policy, step by step</h2>
-          <p className="mt-2 max-w-xl text-sm text-ink-2">
+          <h2 className="mt-3 font-display text-xl font-semibold tracking-[-0.03em]">Every policy, step by step</h2>
+          <p className="mt-2 max-w-xl text-sm text-fg-2">
             Each step links to its transaction on Arc or its order on Gemini, so you can check it yourself.
           </p>
         </div>
@@ -53,16 +53,16 @@ export function MyCover() {
         {!mounted ? (
           <div className="placeholder h-40" />
         ) : !isConnected ? (
-          <div className="flex flex-wrap items-center justify-between gap-4 border-y border-rule py-8">
-            <p className="text-ink-2">Connect your wallet to see the policies you&apos;ve bought.</p>
+          <div className="flex flex-wrap items-center justify-between gap-4 border-y border-line py-8">
+            <p className="text-fg-2">Connect your wallet to see the policies you&apos;ve bought.</p>
             <ConnectButton />
           </div>
         ) : isLoading ? (
           <div className="placeholder h-40" />
         ) : !policies?.length ? (
-          <div className="border-y border-rule py-8">
-            <p className="font-serif text-md">No policies yet.</p>
-            <p className="mt-1 text-sm text-ink-2">A policy appears here a few seconds after you buy it.</p>
+          <div className="border-y border-line py-8">
+            <p className="font-display text-md">No policies yet.</p>
+            <p className="mt-1 text-sm text-fg-2">A policy appears here a few seconds after you buy it.</p>
           </div>
         ) : (
           policies.map((p) => <TrackedPolicy key={p.policyId} p={p} />)
@@ -78,12 +78,12 @@ function Totals({ policies }: { policies: PolicyTimeline[] }) {
   return (
     <dl className="flex gap-10 text-sm">
       <div>
-        <dt className="text-xs text-ink-2">Open</dt>
-        <dd className="num font-serif text-lg">{active}</dd>
+        <dt className="text-xs text-fg-2">Open</dt>
+        <dd className="num font-display text-lg">{active}</dd>
       </div>
       <div>
-        <dt className="text-xs text-ink-2">Paid out to you</dt>
-        <dd className="num font-serif text-lg text-accent">{usdc(paid)} USDC</dd>
+        <dt className="text-xs text-fg-2">Paid out to you</dt>
+        <dd className="num font-display text-lg text-up">{usdc(paid)} USDC</dd>
       </div>
     </dl>
   );

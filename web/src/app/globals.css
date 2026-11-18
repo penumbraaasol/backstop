@@ -2,47 +2,51 @@
 
 /*
  * Design tokens: the only place colours, fonts, radii and the type scale are defined.
- * Direction: "the policy schedule". Warm paper, black ink, hairline rules, one green accent.
+ * Direction: a professional trading app. Near-black, white primary action,
+ * green/red only for YES/NO and paid/failed, hairline borders, no gradients or glows.
  */
 @theme {
   /* type */
-  --font-serif: var(--font-source-serif), "Iowan Old Style", Georgia, serif;
-  --font-sans: var(--font-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
 
   --text-xs: 0.8125rem;   /* 13px */
-  --text-xs--line-height: 1.35rem;
+  --text-xs--line-height: 1.25rem;
   --text-sm: 0.9375rem;   /* 15px */
-  --text-sm--line-height: 1.5rem;
+  --text-sm--line-height: 1.45rem;
   --text-md: 1.125rem;    /* 18px */
-  --text-md--line-height: 1.65rem;
+  --text-md--line-height: 1.6rem;
   --text-lg: 1.5rem;      /* 24px */
-  --text-lg--line-height: 2rem;
+  --text-lg--line-height: 1.9rem;
   --text-xl: 2.25rem;     /* 36px */
-  --text-xl--line-height: 2.6rem;
-  --text-2xl: 3.5rem;     /* 56px */
-  --text-2xl--line-height: 1.05;
+  --text-xl--line-height: 2.5rem;
+  --text-2xl: 4rem;       /* 64px */
+  --text-2xl--line-height: 1;
 
   /* colour: each one has a single job */
-  --color-paper: #f5f2ea;        /* page */
-  --color-paper-raised: #fbf9f4; /* inputs, selected row */
-  --color-paper-sunk: #ece7db;   /* hover rows, code wells */
-  --color-ink: #1a1916;          /* text, rules that matter */
-  --color-ink-2: #57534a;        /* secondary text, 6.6:1 on paper */
-  --color-ink-3: #6f6a60;        /* tertiary text, 4.9:1 on paper */
-  --color-rule: #d9d3c5;         /* hairlines */
-  --color-accent: #1e5b3e;       /* primary action + "paid out" only */
-  --color-accent-ink: #f5f2ea;   /* text on accent */
-  --color-pending: #8a5a0b;      /* waiting / refunded */
-  --color-danger: #9e2f25;       /* errors */
+  --color-bg: #0a0a0b;          /* page */
+  --color-surface: #121214;     /* panels */
+  --color-surface-2: #1a1a1d;   /* inputs, hover, selected row */
+  --color-line: #242428;        /* hairlines */
+  --color-line-strong: #36363c; /* input borders, emphasised rules */
+  --color-fg: #f2f2f3;          /* primary text */
+  --color-fg-2: #a6a6ae;        /* secondary text, 8.3:1 on bg */
+  --color-fg-3: #85858d;        /* tertiary text, 5.6:1 on bg */
+  --color-primary: #f2f2f3;     /* the one primary action is white */
+  --color-primary-fg: #0a0a0b;
+  --color-up: #22ab94;          /* YES, paid out, success */
+  --color-down: #f23645;        /* NO, errors */
+  --color-warn: #e8a33d;        /* waiting, refunded */
 
   /* shape */
-  --radius-sm: 3px;
-  --radius-md: 6px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 html {
@@ -51,23 +55,23 @@ html {
 }
 
 body {
-  background: var(--color-paper);
-  color: var(--color-ink);
+  background: var(--color-bg);
+  color: var(--color-fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
-  font-feature-settings: "kern";
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
-  background: #d8e4dc;
+  background: rgb(255 255 255 / 0.18);
 }
 
 /* all money, odds and times line up in columns */
 .num {
-  font-variant-numeric: tabular-nums lining-nums;
+  font-variant-numeric: tabular-nums;
 }
 
-/* the signature detail: dotted leaders between a label and a figure */
+/* receipt rows: label, dotted leader, figure */
 .leader {
   display: flex;
   align-items: baseline;
@@ -76,13 +80,13 @@ body {
 .leader > .dots {
   flex: 1;
   min-width: 1rem;
-  border-bottom: 1px dotted var(--color-ink-3);
+  border-bottom: 1px dotted var(--color-line-strong);
   transform: translateY(-0.3em);
 }
 
 /* a quiet placeholder while data loads */
 .placeholder {
-  background: var(--color-paper-sunk);
+  background: var(--color-surface-2);
   border-radius: var(--radius-sm);
 }
 
@@ -105,7 +109,7 @@ input[type="number"] {
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-ink);
+  outline: 2px solid var(--color-fg);
   outline-offset: 2px;
 }
 

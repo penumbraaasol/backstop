@@ -63,7 +63,7 @@ export function ConnectButton({ className, block }: { className?: string; block?
     return (
       <Button
         variant="secondary"
-        className={cx("border-pending text-pending", w, className)}
+        className={cx("border-warn text-warn", w, className)}
         loading={switching}
         onClick={() => switchChain({ chainId: arcTestnet.id })}
       >
@@ -79,16 +79,16 @@ export function ConnectButton({ className, block }: { className?: string; block?
     <div ref={ref} className={cx("relative", className)}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-3 rounded-md border border-rule bg-paper-raised py-2 pl-3 pr-2 text-sm transition-colors hover:border-ink"
+        className="flex items-center gap-3 rounded-md border border-line bg-surface py-2 pl-3 pr-2 text-sm transition-colors hover:border-line-strong"
       >
         <span className="num font-medium">{usdc} USDC</span>
-        <span className="h-4 w-px bg-rule" />
-        <span className="font-mono text-xs text-ink-2">{shortAddr(address)}</span>
-        <ChevronDown className={cx("size-4 text-ink-2 transition-transform", open && "rotate-180")} />
+        <span className="h-4 w-px bg-line" />
+        <span className="font-mono text-xs text-fg-2">{shortAddr(address)}</span>
+        <ChevronDown className={cx("size-4 text-fg-2 transition-transform", open && "rotate-180")} />
       </button>
       {open && (
-        <div className="absolute right-0 z-50 mt-1 w-60 rounded-md border border-ink bg-paper-raised py-1 text-sm shadow-[4px_4px_0_0_var(--color-rule)]">
-          <p className="border-b border-rule px-3 py-2 text-xs text-ink-2">Arc Testnet · {shortAddr(address)}</p>
+        <div className="absolute right-0 z-50 mt-1 w-60 rounded-md border border-line-strong bg-surface py-1 text-sm shadow-[4px_4px_0_0_var(--color-line)]">
+          <p className="border-b border-line px-3 py-2 text-xs text-fg-2">Arc Testnet · {shortAddr(address)}</p>
           <MenuItem onClick={() => navigator.clipboard.writeText(address!)}>Copy address</MenuItem>
           <MenuItem href={addressUrl(address!)}>View on Arc explorer</MenuItem>
           <MenuItem href={FAUCET_URL}>Get testnet USDC</MenuItem>
@@ -100,7 +100,7 @@ export function ConnectButton({ className, block }: { className?: string; block?
 }
 
 function MenuItem({ children, href, onClick }: { children: React.ReactNode; href?: string; onClick?: () => void }) {
-  const cls = "block w-full px-3 py-2 text-left hover:bg-paper-sunk";
+  const cls = "block w-full px-3 py-2 text-left hover:bg-surface-2";
   return href ? (
     <a className={cls} href={href} target="_blank" rel="noreferrer">
       {children} ↗

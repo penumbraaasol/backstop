@@ -13,7 +13,7 @@ const LINKS = [
 export function Nav() {
   const { data: conf } = useBackendConfig();
   return (
-    <header className="sticky top-0 z-40 border-b border-rule bg-paper/95 backdrop-blur-[2px]">
+    <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-[2px]">
       <nav className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-6 px-5 sm:px-8">
         <div className="flex items-center gap-10">
           <a href="#top" aria-label="Backstop, top of page">
@@ -21,14 +21,14 @@ export function Nav() {
           </a>
           <div className="hidden items-center gap-6 md:flex">
             {LINKS.map((l) => (
-              <a key={l.href} href={l.href} className="text-sm text-ink-2 hover:text-ink">
+              <a key={l.href} href={l.href} className="text-sm text-fg-2 hover:text-fg">
                 {l.label}
               </a>
             ))}
           </div>
         </div>
         <div className="flex items-center gap-5">
-          <p className="hidden text-xs text-ink-2 lg:block">
+          <p className="hidden text-xs text-fg-2 lg:block">
             Arc Testnet{conf ? ` · hedges on Gemini ${conf.hedgeMode}` : ""}
           </p>
           <ConnectButton />
