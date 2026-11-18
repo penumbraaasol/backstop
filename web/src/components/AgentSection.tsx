@@ -46,7 +46,7 @@ export function AgentSection() {
       <div className="flex flex-wrap items-end justify-between gap-8">
         <div className="max-w-xl">
           <Eyebrow>Grok Bot</Eyebrow>
-          <h1 className="mt-3 text-xl font-semibold tracking-[-0.03em]">An AI hedger with its own wallet</h1>
+          <h1 className="mt-3 text-xl font-semibold tracking-[-0.03em]">Your AI hedging desk</h1>
           <p className="mt-2 text-sm text-fg-2">
             Watches the markets around the clock and buys cover on its own.
           </p>

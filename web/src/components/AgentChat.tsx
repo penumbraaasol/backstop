@@ -102,8 +102,7 @@ export function AgentChat({ seed }: { seed?: ChatMessage[] } = {}) {
           <div className="flex h-full flex-col items-center justify-center text-center">
             <p className="text-xl font-semibold tracking-[-0.03em]">What should I protect?</p>
             <p className="mt-2 max-w-sm text-sm text-fg-2">
-              Tell me what you hold or what you&apos;re worried about. I&apos;ll screen the live markets and buy cover from my
-              own wallet on Arc.
+              Tell me what you hold or what you&apos;re worried about, and I&apos;ll cover it.
             </p>
             <div className="mt-8 grid w-full max-w-xl gap-2 sm:grid-cols-2">
               {STARTERS.map((s) => (
@@ -176,7 +175,7 @@ export function AgentChat({ seed }: { seed?: ChatMessage[] } = {}) {
           </button>
         </div>
         <p className="mt-2 text-center text-[11px] text-fg-3">
-          Grok acts on its own testnet wallet. Purchases are capped by the server and logged on the right.
+          Purchases are capped and logged on the right.
         </p>
       </form>
     </div>
