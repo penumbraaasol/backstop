@@ -1,7 +1,9 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, type AgentActivity, type AgentEvent } from "@/lib/api";
+import { useState } from "react";
+import { api, type AgentActivity, type AgentEvent, type Autopilot } from "@/lib/api";
+import { GrokMark } from "./logos";
 import { useNow } from "@/lib/hooks";
 import { cx, ExtLink, Spinner } from "./ui";
 
@@ -26,6 +28,7 @@ export function AgentJobs() {
     );
   return (
     <div className="flex h-[640px] flex-col gap-3">
+      <AutopilotCard ap={data.jobs.autopilot} now={now} />
       <Jobs jobs={data.jobs} now={now} />
       <Feed events={data.events} now={now} />
     </div>
@@ -128,7 +131,68 @@ function Pulse({ ok, idle }: { ok: boolean; idle?: boolean }) {
   );
 }
 
+function AutopilotCard({ ap, now }: { ap: Autopilot; now: number }) {
+  const qc = useQueryClient();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(ap.mandate);
+  const save = useMutation({
+    mutationFn: (body: { enabled?: boolean; mandate?: string }) => api.setAutopilot(body),
+    onSuccess: () => {
+      setEditing(false);
+      qc.invalidateQueries({ queryKey: ["agentActivity"] });
+    },
+  });
+  return (
+    <div className="rounded-[22px] border border-line bg-surface px-5 py-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+          <GrokMark className="size-4" />
+          Grok autopilot
+          <Pulse ok={ap.enabled} idle={!ap.enabled} />
+        </p>
+        <button
+          role="switch"
+          aria-checked={ap.enabled}
+          onClick={() => save.mutate({ enabled: !ap.enabled })}
+          disabled={save.isPending}
+          className={cx("relative h-5 w-9 rounded-full transition-colors", ap.enabled ? "bg-up" : "bg-line-strong")}
+        >
+          <span className={cx("absolute top-0.5 size-4 rounded-full bg-fg transition-all", ap.enabled ? "left-[18px]" : "left-0.5")} />
+          <span className="sr-only">Autopilot {ap.enabled ? "on" : "off"}</span>
+        </button>
+      </div>
+      {editing ? (
+        <div className="mt-2">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            maxLength={400}
+            rows={3}
+            className="w-full resize-none rounded-xl border border-line-strong bg-surface-2 px-3 py-2 text-xs text-fg focus:border-fg-3 focus:outline-none"
+          />
+          <div className="mt-1.5 flex justify-end gap-3 text-xs">
+            <button onClick={() => setEditing(false)} className="text-fg-2 hover:text-fg">Cancel</button>
+            <button onClick={() => save.mutate({ mandate: draft })} disabled={draft.trim().length < 10 || save.isPending} className="font-medium text-fg hover:underline">
+              Save mandate
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => { setDraft(ap.mandate); setEditing(true); }} className="mt-2 block text-left text-xs leading-relaxed text-fg-2 hover:text-fg">
+          &ldquo;{ap.mandate}&rdquo; <span className="text-fg-3 underline underline-offset-2">edit</span>
+        </button>
+      )}
+      <p className="mt-2 text-[11px] text-fg-3">
+        {ap.enabled
+          ? `Reviews every finding and at least every ${Math.round(ap.reviewEverySec / 60)} min · last decision ${ago(ap.lastDecisionAt, now)}`
+          : "Off. Findings are logged, but Grok won't act on them."}
+      </p>
+    </div>
+  );
+}
+
 const KIND: Record<AgentEvent["kind"], { label: string; cls: string }> = {
+  decision: { label: "Grok", cls: "text-fg" },
   action: { label: "Bought", cls: "text-up" },
   onchain: { label: "On-chain", cls: "text-fg" },
   finding: { label: "Finding", cls: "text-warn" },
@@ -151,16 +215,20 @@ function Feed({ events, now }: { events: AgentEvent[]; now: number }) {
       ) : (
         <ol className="min-h-0 flex-1 divide-y divide-line overflow-y-auto">
           {events.map((e) => (
-            <li key={e.id} className="settle px-5 py-2.5">
+            <li key={e.id} className={cx("settle px-5 py-2.5", e.kind === "decision" && "bg-surface-2/60")}>
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-[13px] leading-snug">
-                  <span className={cx("mr-2 text-[10px] font-semibold uppercase tracking-[0.08em]", KIND[e.kind].cls)}>{KIND[e.kind].label}</span>
-                  {e.title}
+                  {e.kind === "decision" ? (
+                    <GrokMark className="mr-1.5 inline size-3.5 -translate-y-px align-middle" />
+                  ) : (
+                    <span className={cx("mr-2 text-[10px] font-semibold uppercase tracking-[0.08em]", KIND[e.kind].cls)}>{KIND[e.kind].label}</span>
+                  )}
+                  <span className={cx(e.kind === "decision" && e.title.startsWith("Buy") && "font-medium text-up")}>{e.title}</span>
                 </p>
                 <span className="num shrink-0 font-mono text-[11px] text-fg-3">{ago(e.at, now)}</span>
               </div>
               {(e.detail || e.url) && (
-                <p className="mt-0.5 text-xs text-fg-2">
+                <p className={cx("mt-0.5 text-xs", e.kind === "decision" ? "text-fg" : "text-fg-2")}>
                   {e.detail}
                   {e.url && (
                     <ExtLink href={e.url} className="ml-1.5 font-mono">

@@ -13,6 +13,7 @@ import { resolveOnce } from "./resolver.js";
 import { allowAssist, suggestCover } from "./assist.js";
 import { agentAddress, agentEnabled, agentStatus, recentEvents, runAgent, stopWatch } from "./agent.js";
 import { chat, chatBody } from "./chat.js";
+import { autopilotState, setAutopilot } from "./autopilot.js";
 import { jobsStatus, runJobsOnce } from "./jobs.js";
 
 const app = Fastify({ logger: { level: "info" }, disableRequestLogging: true });
@@ -106,6 +107,14 @@ app.post("/agent/chat", async (req, reply) => {
     req.log.error(e);
     return reply.code(502).send({ error: "upstream", message: (e as Error).message });
   }
+});
+
+const autopilotBody = z.object({ enabled: z.boolean().optional(), mandate: z.string().trim().min(10).max(400).optional() });
+app.get("/agent/autopilot", async () => autopilotState());
+app.post("/agent/autopilot", async (req, reply) => {
+  const parsed = autopilotBody.safeParse(req.body);
+  if (!parsed.success) return reply.code(400).send({ error: "bad_request", message: "Mandate must be 10–400 characters." });
+  return setAutopilot(parsed.data);
 });
 
 app.post("/agent/watches/:id/stop", async (req) => ({ stopped: stopWatch(Number((req.params as { id: string }).id)) }));

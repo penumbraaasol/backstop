@@ -7,6 +7,7 @@ import { backstopAbi, backstopAddress, publicClient } from "./chain.js";
 import { cfg } from "./config.js";
 import { db } from "./db.js";
 import type { MarketView } from "./markets.js";
+import { autopilotState, runAutopilot, type Finding } from "./autopilot.js";
 import { formatUsdc } from "./quotes.js";
 
 type JobStat = { lastRunAt: number | null; lastMs: number | null; lastError: string | null; runs: number };
@@ -17,17 +18,18 @@ const stats = {
   watches: { ...blank() },
 };
 
-const assetOf = (s: string) => /^GEMI-([A-Z]+?)(?:05M|15M|1H|\d)/.exec(s)?.[1] ?? "";
+const assetOf = (s: string) => (s.startsWith("GEMI-") ? (s.slice(5).includes("-") && !/^[A-Z]+\d/.test(s.slice(5)) ? s.slice(5).split("-")[0]! : (/^GEMI-([A-Z]+?)(?:05M|15M|1H|\d)/.exec(s)?.[1] ?? "")) : "");
 
 // --- 1. market screener ---------------------------------------------------------------------------
 const lastAsk = new Map<string, { yes: number; no: number }>();
 const flaggedCheap = new Set<string>();
 let firstScan = true;
 
-function screen(markets: MarketView[]) {
-  let findings = 0;
+function screen(markets: MarketView[]): Finding[] {
+  const found: Finding[] = [];
   const opened: MarketView[] = [];
   for (const m of markets) {
+    if (m.category === "sports") continue; // game odds move constantly; not useful for hedging findings
     const prev = lastAsk.get(m.instrumentSymbol);
     if (!prev && !firstScan && (m.kind === "15m" || /1H$/.test(m.series ?? ""))) opened.push(m);
     if (prev) {
@@ -35,7 +37,14 @@ function screen(markets: MarketView[]) {
         const now = side === "yes" ? m.askYes : m.askNo;
         const d = now - prev[side];
         if (Math.abs(d) >= 0.08) {
-          findings++;
+          found.push({
+            kind: "move",
+            market: m,
+            side,
+            prev: prev[side],
+            now,
+            text: `${m.question}: ${side.toUpperCase()} ask ${d > 0 ? "jumped" : "dropped"} ${prev[side].toFixed(2)} → ${now.toFixed(2)} (closes in ${Math.round(m.secondsToExpiry / 60)} min)`,
+          });
           logEvent("finding", `${assetOf(m.instrumentSymbol)} ${side.toUpperCase()} ${d > 0 ? "jumped" : "dropped"} ${prev[side].toFixed(2)} → ${now.toFixed(2)}`, {
             detail: `${m.question}. ${d > 0 ? "Cover on this side just got more expensive." : "Cover on this side just got cheaper."}`,
             symbol: m.instrumentSymbol,
@@ -43,13 +52,15 @@ function screen(markets: MarketView[]) {
         }
       }
     }
-    // cheap tail cover with time left: worth flagging once
+    // cheap tail cover with time left: worth flagging once (crypto and commodities; sub-5¢ tails are noise)
     for (const side of ["yes", "no"] as const) {
       const ask = side === "yes" ? m.askYes : m.askNo;
       const key = `${m.instrumentSymbol}:${side}`;
-      if (ask <= 0.15 && m.secondsToExpiry > 300 && !flaggedCheap.has(key)) {
+      const cheap = ask >= 0.05 && ask <= 0.15 && m.secondsToExpiry > 300 && (m.category === "crypto" || m.category === "commodities");
+      if (cheap && !flaggedCheap.has(key)) {
         flaggedCheap.add(key);
-        findings++;
+        if (firstScan) continue; // the first pass only records the baseline
+        found.push({ kind: "cheap", market: m, side, now: ask, text: `${m.question}: ${side.toUpperCase()} cover is cheap at ${ask.toFixed(2)}` });
         logEvent("finding", `Cheap tail cover: ${assetOf(m.instrumentSymbol)} ${side.toUpperCase()} at ${ask.toFixed(2)}`, {
           detail: `${m.question}. 1 USDC of cover costs ${(ask + cfg.SPREAD).toFixed(2)} USDC.`,
           symbol: m.instrumentSymbol,
@@ -59,14 +70,14 @@ function screen(markets: MarketView[]) {
     lastAsk.set(m.instrumentSymbol, { yes: m.askYes, no: m.askNo });
   }
   if (opened.length) {
-    findings++;
+    for (const m of opened) found.push({ kind: "opened", market: m, text: `New window: ${m.question} (YES ${m.askYes.toFixed(2)} / NO ${m.askNo.toFixed(2)})` });
     const list = opened;
     logEvent("scan", `${list.length} new window${list.length > 1 ? "s" : ""} opened`, {
       detail: [...new Set(list.map((m) => `${assetOf(m.instrumentSymbol)} ${m.kind === "15m" ? "15 min" : "1 h"}`))].join(", "),
     });
   }
   firstScan = false;
-  return findings;
+  return found;
 }
 
 // --- 2. on-chain watcher --------------------------------------------------------------------------
@@ -161,13 +172,17 @@ export async function runJobsOnce() {
   busy = true;
   try {
     let markets: MarketView[] = [];
+    let found: Finding[] = [];
     await timed(stats.screener, async () => {
       markets = await marketsForAgent();
       stats.screener.marketsScanned = markets.length;
-      stats.screener.findings += screen(markets);
+      found = screen(markets);
+      stats.screener.findings += found.length;
     });
     await timed(stats.onchain, watchChain);
     if (markets.length) await timed(stats.watches, () => runWatches(markets));
+    // Grok acts on what the screener found (runs in the background so the loop keeps its rhythm)
+    if (markets.length) void runAutopilot(found, markets);
   } finally {
     busy = false;
   }
@@ -176,6 +191,7 @@ export async function runJobsOnce() {
 export function jobsStatus() {
   return {
     intervalSec: Math.round(cfg.SCREENER_INTERVAL_MS / 1000),
+    autopilot: autopilotState(),
     screener: stats.screener,
     onchain: stats.onchain,
     watches: {

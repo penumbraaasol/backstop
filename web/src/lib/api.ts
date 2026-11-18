@@ -121,7 +121,7 @@ export type ChatMessage = { role: "user" | "assistant"; content: string; steps?:
 export type AgentEvent = {
   id: number;
   at: number;
-  kind: "scan" | "finding" | "onchain" | "action" | "watch" | "error";
+  kind: "scan" | "finding" | "onchain" | "action" | "watch" | "error" | "decision";
   title: string;
   detail: string | null;
   instrumentSymbol: string | null;
@@ -143,9 +143,19 @@ export type AgentWatch = {
   lastRun: number | null;
   lastResult: string | null;
 };
+export type Autopilot = {
+  enabled: boolean;
+  mandate: string;
+  lastDecisionAt: number | null;
+  lastReviewAt: number | null;
+  reviewEverySec: number;
+  model: string;
+};
+
 export type AgentActivity = {
   jobs: {
     intervalSec: number;
+    autopilot: Autopilot;
     screener: JobStat & { marketsScanned: number; findings: number };
     onchain: JobStat & { policiesTracked: number; freeLiquidityUsdc: string | null };
     watches: JobStat & { list: AgentWatch[] };
@@ -236,6 +246,12 @@ export const api = {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ messages: messages.map(({ role, content }) => ({ role, content })) }),
+    }),
+  setAutopilot: (body: { enabled?: boolean; mandate?: string }) =>
+    call<Autopilot>("/agent/autopilot", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
     }),
   stopWatch: (id: number) => call<{ stopped: boolean }>(`/agent/watches/${id}/stop`, { method: "POST" }),
   runAgent: (message: string) =>

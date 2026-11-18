@@ -63,6 +63,8 @@ const schema = z.object({
   MOCK_MARKETS: z.preprocess((v) => v === "true" || v === "1", z.boolean()).default(false),
   /** how often the agent's market screener and watches run */
   SCREENER_INTERVAL_MS: z.coerce.number().default(30_000),
+  /** Grok autopilot acts on screener findings under a standing mandate (can be toggled at runtime) */
+  AUTOPILOT_DEFAULT_ON: z.preprocess((v) => v !== "false" && v !== "0", z.boolean()).default(true),
 
   // unused by the backend, accepted so a shared .env validates
   PRIVATE_KEY_DEPLOYER: optionalKey,

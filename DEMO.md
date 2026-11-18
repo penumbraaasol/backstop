@@ -29,8 +29,15 @@ The goal is to show one real policy going end to end: **live Gemini price → on
 | 1:15–1:35 | Success panel → **Track policy** → My cover timeline | "The policy is onchain, and its full payout is locked in the contract. The backend saw the event and placed a real order on Gemini. Here's the fill and price." Point at "Hedged on Gemini · 2 NO @ 0.xx". |
 | 1:35–1:50 | Explorer tab: buy tx, PolicyPurchased event | "Everything is verifiable on Arc: the purchase, the locked payout, the signer." |
 | 1:50–2:30 | Back on My cover, wait for expiry (or cut ahead) | "When the window closes, the backend reads Gemini's official result and posts it onchain. The contract pays out automatically." Show "Resolved" then "Paid out" or "Expired" with tx links. |
+| 2:10–2:30 | **Grok agent** page | "Grok runs on autopilot. Its mandate: I hold BTC and ETH, keep my downside covered when cover is fairly priced." Point at the activity feed: a screener finding, then Grok's decision with its reason ("Buy · ETH downside cover… NO at 0.48, 12 min left"), then the purchase tx and the Gemini hedge. "No human signed that." |
 | 2:30–2:50 | How it works → protections card | "If the hedge can't fill, the premium is refunded automatically. If our backend goes down, buyers can reclaim their premium themselves after a grace period. The operator can never withdraw funds locked for open policies." |
 | 2:50–3:00 | Hero | "Backstop: the prediction market is both the oracle and the reinsurer. A new DeFi primitive for hedging real-world events." |
+
+## Getting an autopilot decision on camera
+
+- Turn the autopilot on 5 minutes before recording (switch on the agent page). It reviews every finding and at least every 5 minutes, so a decision appears in the feed on its own.
+- To trigger one on demand, edit the mandate (e.g. "I hold ETH. Keep 3 USDC of downside cover on the next 15-minute window while it costs under 0.60."). The next screener pass, within 30 s, sends it to Grok.
+- Every decision, buy or hold, shows in the activity feed with the Grok mark and its reason; buys link to the Arc tx, and the policy appears under "Policies the agent holds".
 
 ## If something goes wrong on camera
 

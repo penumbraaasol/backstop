@@ -16,7 +16,7 @@ const wallet = account ? createWalletClient({ account, chain: arcTestnet, transp
 export const agentAddress = account?.address;
 export const agentEnabled = () => !!(cfg.AGENT_ENABLED && account && cfg.GROK_API_KEY);
 
-export type Source = "button" | "chat" | "watch";
+export type Source = "button" | "chat" | "watch" | "autopilot";
 
 type AgentActionRow = {
   id: number;
@@ -37,7 +37,7 @@ type AgentActionRow = {
 };
 
 // --- activity feed -----------------------------------------------------------------------------
-export type EventKind = "scan" | "finding" | "onchain" | "action" | "watch" | "error";
+export type EventKind = "scan" | "finding" | "onchain" | "action" | "watch" | "error" | "decision";
 
 export function logEvent(
   kind: EventKind,
@@ -168,7 +168,7 @@ export type BuyResult =
 
 /** The only way the agent spends money. Checks limits, buys with a signed quote, logs everything. */
 export function buyCover(
-  pick: { market: MarketView; outcome: "yes" | "no"; payout: number },
+  pick: { market: MarketView; outcome: "yes" | "no"; payout: number; /** refuse if the live ask is above this */ maxAsk?: number },
   meta: { instruction: string; summary: string; reasoning: string; source: Source },
 ): Promise<BuyResult> {
   return serial(async () => {
@@ -193,6 +193,9 @@ export function buyCover(
         payout,
       });
       const premium = BigInt(q.quote.premium);
+      // the price may have moved since the decision: never pay more than 2¢ above what was decided on
+      if (pick.maxAsk !== undefined && q.breakdown.price > pick.maxAsk + 0.02)
+        return fail("blocked", `Price moved: ${pick.outcome.toUpperCase()} is now ${q.breakdown.price.toFixed(2)}, decided at ${pick.maxAsk.toFixed(2)}. Nothing bought.`, premium);
 
       const spent = spentToday();
       if (spent + premium > dailyBudget())
@@ -338,7 +341,7 @@ export async function runWatches(markets: MarketView[]) {
       continue;
     }
     const r = await buyCover(
-      { market: m, outcome: w.outcome, payout: w.payout },
+      { market: m, outcome: w.outcome, payout: w.payout, maxAsk: w.max_price },
       {
         instruction: `Watch #${w.id}: ${w.note}`,
         summary: `Cover ${w.payout} USDC if ${w.outcome === "no" ? "not " : ""}${m.question}`,

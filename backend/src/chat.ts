@@ -19,6 +19,7 @@ import { cfg } from "./config.js";
 import { db } from "./db.js";
 import type { MarketView } from "./markets.js";
 import { formatUsdc, QuoteError } from "./quotes.js";
+import { setAutopilot } from "./autopilot.js";
 
 export type Step = { tool: string; label: string; ok: boolean; detail?: string; url?: string; policyId?: number };
 
@@ -97,6 +98,21 @@ const TOOLS = [
   {
     type: "function",
     function: {
+      name: "set_autopilot",
+      description:
+        "Turn the autopilot on or off and/or set its mandate: a plain-English standing instruction. On every screener finding (and every 5 min) you review the findings under this mandate and buy or hold on your own.",
+      parameters: {
+        type: "object",
+        properties: {
+          enabled: { type: "boolean" },
+          mandate: { type: "string", description: "What to protect, at what price, e.g. 'I hold ETH. Keep 3 USDC of downside cover on each 15-minute window while it costs under 0.50.'" },
+        },
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "recent_activity",
       description: "Read the agent's recent activity feed: screener findings, on-chain changes and actions.",
       parameters: { type: "object", properties: {} },
@@ -113,7 +129,7 @@ function system() {
     "Act directly when the user's intent to protect or buy is clear: call screen_markets, then call buy_cover in the same turn. Do not stop to describe what you are about to buy: a purchase only exists if you called buy_cover and it returned bought=true.",
     "If buy_cover fails, do not retry the same purchase in this turn. Explain the failure in plain words. Don't promise to retry later unless you started a watch that will; offer to start one instead.",
     "If the request is ambiguous (no asset, or it isn't about risk), ask one short question instead of buying.",
-    "For recurring protection ('keep me covered', 'every window', 'whenever it's cheap'), start a watch instead of a single purchase.",
+    "For recurring protection ('keep me covered', 'every window', 'whenever it's cheap'), prefer set_autopilot with a clear mandate: you then review every screener finding and decide yourself. Use start_watch only for a fixed mechanical rule.",
     "Never claim a purchase, watch or result that a tool didn't confirm. Quote real numbers from tool results: strike, time, premium, policy number.",
     "Style: concise, direct, a little dry wit is fine. Short paragraphs or a few bullets. No emojis, no hype. This is testnet money; say so if the user asks about real funds.",
   ].join("\n");
@@ -254,6 +270,17 @@ async function runTool(name: string, rawArgs: string, steps: Step[], lastUserTex
         const ok = stopWatch(id);
         steps.push({ tool: name, ok, label: ok ? `Stopped watch #${id}` : `No active watch #${id}` });
         return { stopped: ok };
+      }
+      case "set_autopilot": {
+        const p = z.object({ enabled: z.boolean().optional(), mandate: z.string().min(10).max(400).optional() }).parse(args);
+        const st = setAutopilot(p);
+        steps.push({
+          tool: name,
+          ok: true,
+          label: `Autopilot ${st.enabled ? "on" : "off"}${p.mandate ? " · new mandate" : ""}`,
+          detail: p.mandate ? st.mandate : undefined,
+        });
+        return st;
       }
       case "recent_activity": {
         const ev = recentEvents(12);
