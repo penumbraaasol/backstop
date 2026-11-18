@@ -248,23 +248,54 @@ function Markdownish({ text }: { text: string }) {
         <Fragment key={i}>{part}</Fragment>
       ),
     );
-  const blocks = text.trim().split(/\n{2,}/);
+  const FACT = /^\s*\*{0,2}([A-Z][A-Za-z ]{1,18}):\*{0,2}\s+(.+)$/;
+  const BULLET = /^\s*([-*•]|\d+\.)\s+/;
+  const clean = (t: string) => t.replace(/[ \t]+$/gm, "").replace(/\s+—\s+/g, ": ").trim();
+  const blocks = clean(text).split(/\n{2,}/);
   return (
     <div className="space-y-3">
       {blocks.map((b, i) => {
-        const lines = b.split("\n");
-        if (lines.every((l) => /^\s*([-*•]|\d+\.)\s+/.test(l)))
+        const lines = b.split("\n").filter((l) => l.trim());
+        // headline: a line that is bold from start to end
+        if (lines.length === 1 && /^\*\*[^*]+\*\*$/.test(lines[0].trim()))
           return (
-            <ul key={i} className="space-y-1 pl-4">
-              {lines.map((l, j) => (
-                <li key={j} className="list-disc marker:text-fg-3">
-                  {inline(l.replace(/^\s*([-*•]|\d+\.)\s+/, ""))}
-                </li>
-              ))}
-            </ul>
+            <p key={i} className="text-[15px] font-semibold tracking-tight text-fg">
+              {lines[0].trim().slice(2, -2)}
+            </p>
+          );
+        // facts: "Label: value" lines become an aligned two-column list
+        if (lines.length > 1 && lines.every((l) => FACT.test(l)))
+          return (
+            <dl key={i} className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-1.5 rounded-2xl border border-line px-4 py-3 text-[13px]">
+              {lines.map((l, j) => {
+                const [, k, v] = l.match(FACT)!;
+                return (
+                  <Fragment key={j}>
+                    <dt className="text-fg-3">{k}</dt>
+                    <dd className="num text-fg">{inline(v)}</dd>
+                  </Fragment>
+                );
+              })}
+            </dl>
+          );
+        // "Why:" label followed by bullets in the same block
+        const head = lines.length > 1 && !BULLET.test(lines[0]) && lines.slice(1).every((l) => BULLET.test(l)) ? lines[0] : undefined;
+        const items = head ? lines.slice(1) : lines;
+        if (items.every((l) => BULLET.test(l)))
+          return (
+            <div key={i}>
+              {head && <p className="mb-1 text-[13px] font-medium text-fg-2">{inline(head.replace(/\*\*/g, ""))}</p>}
+              <ul className="space-y-1 pl-4">
+                {items.map((l, j) => (
+                  <li key={j} className="list-disc marker:text-fg-3">
+                    {inline(l.replace(BULLET, ""))}
+                  </li>
+                ))}
+              </ul>
+            </div>
           );
         return (
-          <p key={i}>
+          <p key={i} className="text-fg-2">
             {lines.map((l, j) => (
               <Fragment key={j}>
                 {j > 0 && <br />}
