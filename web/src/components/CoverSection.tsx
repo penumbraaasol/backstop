@@ -12,6 +12,7 @@ export function CoverSection() {
   const { data: markets, isLoading, isError, error } = useMarkets();
   const [category, setCategory] = useState("crypto");
   const [horizon, setHorizon] = useState<Horizon>("15m");
+  const [horizonPicked, setHorizonPicked] = useState(false);
   const [asset, setAsset] = useState("ALL");
   const [symbol, setSymbol] = useState<string>();
   const [outcome, setOutcome] = useState<Outcome>("no");
@@ -37,6 +38,20 @@ export function CoverSection() {
   useEffect(() => {
     if (selected && selected.instrumentSymbol !== symbol) setSymbol(selected.instrumentSymbol);
   }, [selected, symbol]);
+
+  // Gemini doesn't always list every crypto horizon: until the user picks a tab,
+  // land on the first one (15 min, 5 min, hourly, daily) that has open markets
+  useEffect(() => {
+    if (horizonPicked || category !== "crypto" || !markets) return;
+    const now = Date.now();
+    const has = (h: Horizon) => markets.some((m) => m.category === "crypto" && horizonOf(m) === h && secondsLeft(m, now) > 45);
+    if (has(horizon)) return;
+    const next = (["15m", "5m", "1h", "later"] as Horizon[]).find(has);
+    if (next) {
+      setHorizon(next);
+      setSymbol(undefined);
+    }
+  }, [markets, horizon, horizonPicked, category]);
 
   // if the chosen side can't be hedged but the other can, switch to it
   useEffect(() => {
@@ -76,6 +91,7 @@ export function CoverSection() {
               horizon={horizon}
               setHorizon={(h) => {
                 setHorizon(h);
+                setHorizonPicked(true);
                 setSymbol(undefined);
               }}
               asset={asset}
