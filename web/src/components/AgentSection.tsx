@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import { api } from "@/lib/api";
 import { addressUrl } from "@/lib/chain";
 import { shortAddr } from "@/lib/format";
@@ -35,7 +36,8 @@ export function AgentSection() {
     );
 
   // the demo shows working policies: refunded ones (hedge didn't fill) stay on-chain but off this page
-  const shown = (policies ?? []).filter((p) => p.status !== "refunded").slice(0, 3);
+  // only the latest policy that worked here; the full list lives on My cover
+  const latest = (policies ?? []).find((p) => p.status !== "refunded" && p.steps.hedged.status === "filled");
   const spent = Number(a.spentTodayUsdc);
   const budget = Number(a.dailyBudgetUsdc);
 
@@ -81,13 +83,16 @@ export function AgentSection() {
         <AgentJobs />
       </div>
 
-      {shown.length > 0 && (
+      {latest && (
         <div className="mt-14">
-          <h3 className="text-sm font-semibold tracking-tight">Policies the agent holds</h3>
-          <div className="mt-4 space-y-6">
-            {shown.map((p) => (
-              <TrackedPolicy key={p.policyId} p={p} />
-            ))}
+          <div className="flex items-baseline justify-between gap-4">
+            <h3 className="text-sm font-semibold tracking-tight">Latest policy</h3>
+            <Link href="/cover#grok" className="text-xs text-fg-2 underline-offset-4 hover:text-fg hover:underline">
+              All Grok Bot policies →
+            </Link>
+          </div>
+          <div className="mt-4">
+            <TrackedPolicy p={latest} />
           </div>
         </div>
       )}
