@@ -144,7 +144,11 @@ export async function venueCanHedge(instrumentSymbol: string, outcome: "yes" | "
   const listed = await venueListed(instrumentSymbol, eventTicker);
   if (!listed && cfg.HEDGE_MODE === "sandbox") return { ok: true, via: "simulated" as const, ask: quoted };
   const ask = await venueAsk(instrumentSymbol, outcome, eventTicker);
-  return { ok: ask !== undefined && ask <= quoted + cfg.MAX_SLIPPAGE, via: cfg.HEDGE_MODE, ask };
+  const ok = ask !== undefined && ask <= quoted + cfg.MAX_SLIPPAGE;
+  // sandbox books are thin and drift from production: hedge those on the simulated venue at the production price.
+  // Live mode stays strict: no real hedge, no sale.
+  if (!ok && cfg.HEDGE_MODE === "sandbox") return { ok: true, via: "simulated" as const, ask: quoted };
+  return { ok, via: cfg.HEDGE_MODE, ask };
 }
 
 /** Listed on the venue with a live book (at least one side has an ask). An empty book means nobody trades it there. */

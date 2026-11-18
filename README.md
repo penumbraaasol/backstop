@@ -237,7 +237,7 @@ API: `GET /markets`, `POST /quote`, `POST /assist`, `GET /agent`, `POST /agent/r
 
 **Hedge modes.** Market data always comes from Gemini production.
 - `simulated` sends no order. It records a fill at the live production ask if that ask is within the limit price, and otherwise fails, which triggers the refund path. Set `SIMULATE_HEDGE_FAILURE=true` to force the refund path for a demo.
-- `sandbox` places real orders on `api.sandbox.gemini.com`. The sandbox has its own order books, so: (1) where the sandbox trades a market, quotes are refused when its ask is more than `MAX_SLIPPAGE` above the quoted production ask ("only sell cover you can hedge"), and the market table dims those sides; (2) markets the sandbox doesn't trade (weather, sports, most commodities, and crypto ladders with empty sandbox books) are hedged on the simulated venue at the production ask, and the policy timeline labels them `simulated`. In `live` mode every hedge goes to Gemini production.
+- `sandbox` places real orders on `api.sandbox.gemini.com` wherever the sandbox can fill near the quoted production ask (within `MAX_SLIPPAGE`). The sandbox has its own thin order books, so markets it doesn't trade (weather, sports, most commodities), sides whose sandbox ask has drifted too far, and orders that don't fill are hedged on the simulated venue at the production ask instead, and the policy timeline labels them `simulated`. Every side stays buyable on testnet. In `live` mode every hedge goes to Gemini production, and a quote is refused when the real book can't fill it near the quoted price ("only sell cover you can hedge").
 - `live` places real production orders, capped at `MAX_LIVE_CONTRACTS` (default 5).
 
 ### Gemini integration notes (verified this week)

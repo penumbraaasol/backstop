@@ -193,7 +193,8 @@ async function build(category: string, perSeries: number): Promise<MarketView[]>
       const b = venue.get(v.instrumentSymbol);
       // not listed on the sandbox at all: hedged on the simulated venue at the production price
       const traded = !!b && (b.yes !== undefined || b.no !== undefined);
-      v.hedgeable = !traded && cfg.HEDGE_MODE === "sandbox" ? { yes: true, no: true } : { yes: ok(b?.yes, v.askYes), no: ok(b?.no, v.askNo) };
+      // sandbox mode: anything the sandbox can't fill near the quote is hedged on the simulated venue, so every side is buyable
+      v.hedgeable = cfg.HEDGE_MODE === "sandbox" || !traded ? { yes: true, no: true } : { yes: ok(b?.yes, v.askYes), no: ok(b?.no, v.askNo) };
     }
   }
 
