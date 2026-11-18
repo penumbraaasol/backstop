@@ -25,6 +25,8 @@ Backstop packages a prediction-market position as a simple insurance product: "p
 4. **Resolve.** After expiry, the backend reads Gemini's `resolutionSide` and calls `resolveMarket` once per market, then `settle` for each policy. The contract pays N USDC to winning policies and releases the locked liquidity.
 5. **Safety valves.** If the backend disappears, buyers can call `claimRefund` 24 h after the deadline. The owner can only withdraw unlocked liquidity, and per-policy and per-market caps bound the exposure.
 
+An optional **cover assistant** powered by Grok turns a plain-English worry ("I hold BTC and I'm worried it drops in the next hour") into a filled-in policy: the right market, the side that offsets the risk, and a size. It only suggests. The buyer reviews the policy and signs it from their own wallet, and the backend checks every suggestion against the live market list and the payout limits.
+
 Every path (payout, expiry, refund) has run on Arc testnet, including a real Gemini sandbox fill that paid out and a real unfilled order that was refunded.
 
 ## What makes it unique?

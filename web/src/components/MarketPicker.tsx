@@ -12,6 +12,7 @@ export function MarketPicker({
   markets,
   loading,
   error,
+  backendDown,
   horizon,
   setHorizon,
   asset,
@@ -23,6 +24,7 @@ export function MarketPicker({
   markets: Market[] | undefined;
   loading: boolean;
   error: boolean;
+  backendDown?: boolean;
   horizon: Horizon;
   setHorizon: (h: Horizon) => void;
   asset: string;
@@ -94,7 +96,11 @@ export function MarketPicker({
           ))}
         </ul>
       ) : error && !markets ? (
-        <Note title="Can't reach the Backstop backend." body="Markets load from the backend on port 8787. Start it and this list fills in." />
+        backendDown ? (
+          <Note title="Can't reach the Backstop backend." body="Markets load from the Backstop backend. This list fills in once it's reachable." />
+        ) : (
+          <Note title="Gemini's market data isn't responding." body="Live prices come straight from Gemini. They'll appear here as soon as Gemini is back." />
+        )
       ) : list.length === 0 ? (
         <Note title="No open markets in this window." body="New windows open every few minutes. Try another horizon or asset." />
       ) : (

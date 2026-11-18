@@ -49,6 +49,10 @@ const schema = z.object({
   RESOLVER_INTERVAL_MS: z.coerce.number().default(10_000),
   RUN_WORKERS: z.preprocess((v) => v !== "false" && v !== "0", z.boolean()).default(true),
 
+  /** optional: enables POST /assist (Grok suggests a policy; the buyer still signs) */
+  GROK_API_KEY: optionalStr,
+  GROK_MODEL: z.string().default("grok-4.20-0309-non-reasoning"),
+
   // unused by the backend, accepted so a shared .env validates
   PRIVATE_KEY_DEPLOYER: optionalKey,
 });

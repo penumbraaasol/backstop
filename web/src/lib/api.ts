@@ -31,6 +31,7 @@ export type BackendConfig = {
   quoteSigner: `0x${string}`;
   resolver: `0x${string}`;
   hedgeMode: "simulated" | "sandbox" | "live";
+  assistant?: boolean;
   spread: number;
   maxSlippage: number;
 };
@@ -67,6 +68,16 @@ export type SignedQuote = {
     formula: string;
   };
   market: Market;
+};
+
+export type Suggestion = {
+  instrumentSymbol: string | null;
+  outcome: Outcome | null;
+  payout: number | null;
+  summary: string;
+  reasoning: string;
+  market?: Market;
+  model: string;
 };
 
 export type PolicyStatus = "active" | "paid_out" | "expired" | "refunded";
@@ -126,6 +137,12 @@ export const api = {
   stats: () => call<Stats>("/stats"),
   markets: () => call<{ markets: Market[] }>("/markets?perSeries=3").then((r) => r.markets),
   policies: (address: string) => call<{ policies: PolicyTimeline[] }>(`/policies/${address}`).then((r) => r.policies),
+  assist: (message: string) =>
+    call<Suggestion>("/assist", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ message }),
+    }),
   quote: (body: { buyer: string; instrumentSymbol: string; eventTicker?: string; outcome: Outcome; payout: number }) =>
     call<SignedQuote>("/quote", {
       method: "POST",

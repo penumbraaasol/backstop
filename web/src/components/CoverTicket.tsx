@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useChainId, useConnection } from "wagmi";
 import type { Market, Outcome } from "@/lib/api";
 import { arcTestnet } from "@/lib/chain";
@@ -14,11 +14,15 @@ export function CoverTicket({
   marketsLoading,
   outcome,
   setOutcome,
+  payout,
+  setPayout,
 }: {
   market?: Market;
   marketsLoading?: boolean;
   outcome: Outcome;
   setOutcome: (o: Outcome) => void;
+  payout: number;
+  setPayout: (n: number) => void;
 }) {
   const mounted = useMounted();
   const now = useNow();
@@ -28,7 +32,6 @@ export function CoverTicket({
   const { data: stats } = useStats();
   const { data: balRaw } = useUsdcBalance();
   const { step, error, result, quoteExpiry, buy, reset } = useBuyCover();
-  const [payout, setPayout] = useState(2);
 
   const maxPayout = stats
     ? Math.max(
@@ -36,7 +39,10 @@ export function CoverTicket({
         Math.floor(Math.min(Number(stats.maxPayoutUsdc), Number(stats.freeLiquidityUsdc), Number(stats.maxExposurePerMarketUsdc))),
       )
     : 5;
-  useEffect(() => setPayout((p) => Math.min(Math.max(1, p), maxPayout)), [maxPayout]);
+  useEffect(() => {
+    if (payout > maxPayout) setPayout(maxPayout);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [maxPayout]);
 
   // a new selection clears a finished or failed purchase
   useEffect(() => {

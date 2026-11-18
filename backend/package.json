@@ -2,14 +2,17 @@
   "name": "@backstop/backend",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.5" },
+  "engines": {
+    "node": ">=22.5"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "tsx src/server.ts",
     "abi": "node scripts/sync-abi.mjs",
     "e2e": "tsx scripts/e2e.ts",
     "gemini:check": "tsx scripts/gemini-check.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "assist:check": "tsx scripts/assist-check.ts"
   },
   "dependencies": {
     "@fastify/cors": "11.3.1",

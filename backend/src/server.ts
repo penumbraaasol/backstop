@@ -10,6 +10,7 @@ import { indexOnce } from "./indexer.js";
 import { curatedMarkets } from "./markets.js";
 import { formatUsdc, makeQuote, QuoteError } from "./quotes.js";
 import { resolveOnce } from "./resolver.js";
+import { allowAssist, suggestCover } from "./assist.js";
 
 const app = Fastify({ logger: { level: "info" }, disableRequestLogging: true });
 await app.register(cors, { origin: true });
@@ -25,6 +26,7 @@ app.get("/config", async () => ({
   quoteSigner: signerAccount.address,
   resolver: resolverAccount.address,
   hedgeMode: cfg.HEDGE_MODE,
+  assistant: !!cfg.GROK_API_KEY,
   spread: cfg.SPREAD,
   maxSlippage: cfg.MAX_SLIPPAGE,
 }));
@@ -64,6 +66,21 @@ app.post("/quote", async (req, reply) => {
   if (!parsed.success) return reply.code(400).send({ error: "bad_request", message: parsed.error.issues[0]?.message });
   try {
     return await makeQuote(parsed.data);
+  } catch (e) {
+    if (e instanceof QuoteError) return reply.code(e.status).send({ error: e.code, message: e.message });
+    req.log.error(e);
+    return reply.code(502).send({ error: "upstream", message: (e as Error).message });
+  }
+});
+
+const assistBody = z.object({ message: z.string().trim().min(3).max(500) });
+
+app.post("/assist", async (req, reply) => {
+  const parsed = assistBody.safeParse(req.body);
+  if (!parsed.success) return reply.code(400).send({ error: "bad_request", message: "Describe your risk in a sentence." });
+  if (!allowAssist(req.ip)) return reply.code(429).send({ error: "rate_limited", message: "Too many requests. Try again in a minute." });
+  try {
+    return await suggestCover(parsed.data.message);
   } catch (e) {
     if (e instanceof QuoteError) return reply.code(e.status).send({ error: e.code, message: e.message });
     req.log.error(e);
