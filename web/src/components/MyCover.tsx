@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { useConnection } from "wagmi";
 import type { PolicyTimeline } from "@/lib/api";
 import { publicClient } from "@/lib/chain";
@@ -66,10 +67,28 @@ export function MyCover() {
             <p className="mt-1 text-sm text-fg-2">A policy appears here a few seconds after you buy it.</p>
           </div>
         ) : (
-          policies.map((p) => <TrackedPolicy key={p.policyId} p={p} />)
+          <PolicyList policies={policies} />
         )}
       </div>
     </section>
+  );
+}
+
+function PolicyList({ policies }: { policies: PolicyTimeline[] }) {
+  const [showRefunded, setShowRefunded] = useState(false);
+  const refunded = policies.filter((p) => p.status === "refunded").length;
+  const list = showRefunded ? policies : policies.filter((p) => p.status !== "refunded");
+  return (
+    <>
+      {list.map((p) => (
+        <TrackedPolicy key={p.policyId} p={p} />
+      ))}
+      {refunded > 0 && (
+        <button onClick={() => setShowRefunded((s) => !s)} className="text-xs text-fg-3 underline-offset-4 hover:text-fg hover:underline">
+          {showRefunded ? "Hide" : "Show"} {refunded} refunded {refunded === 1 ? "policy" : "policies"}
+        </button>
+      )}
+    </>
   );
 }
 

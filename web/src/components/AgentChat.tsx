@@ -165,7 +165,7 @@ export function AgentChat({ seed }: { seed?: ChatMessage[] } = {}) {
             }}
             maxLength={2000}
             placeholder="Ask Grok to protect a position…"
-            className="max-h-40 min-h-[24px] flex-1 resize-none bg-transparent py-1.5 text-sm text-fg placeholder:text-fg-3 focus:outline-none"
+            className="max-h-40 min-h-[24px] flex-1 resize-none bg-transparent py-1.5 text-sm text-fg placeholder:text-fg-3 focus:outline-none focus-visible:outline-none"
           />
           <button
             type="submit"

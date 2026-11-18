@@ -30,7 +30,7 @@ export function AgentJobs() {
     <div className="flex h-[640px] flex-col gap-3">
       <AutopilotCard ap={data.jobs.autopilot} now={now} />
       <Jobs jobs={data.jobs} now={now} />
-      <Feed events={data.events} now={now} />
+      <Feed events={data.events.filter((e) => e.kind !== "error" && !/refunded|hedge didn't fill|rejected/i.test(e.title))} now={now} />
     </div>
   );
 }

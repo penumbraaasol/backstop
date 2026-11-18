@@ -34,6 +34,8 @@ export function AgentSection() {
       </section>
     );
 
+  // the demo shows working policies: refunded ones (hedge didn't fill) stay on-chain but off this page
+  const shown = (policies ?? []).filter((p) => p.status !== "refunded").slice(0, 3);
   const spent = Number(a.spentTodayUsdc);
   const budget = Number(a.dailyBudgetUsdc);
 
@@ -81,11 +83,11 @@ export function AgentSection() {
         <AgentJobs />
       </div>
 
-      {policies && policies.length > 0 && (
+      {shown.length > 0 && (
         <div className="mt-14">
           <h3 className="text-sm font-semibold tracking-tight">Policies the agent holds</h3>
           <div className="mt-4 space-y-6">
-            {policies.slice(0, 3).map((p) => (
+            {shown.map((p) => (
               <TrackedPolicy key={p.policyId} p={p} />
             ))}
           </div>
