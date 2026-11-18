@@ -191,8 +191,8 @@ export function PreviewStates() {
       <Eyebrow>Design review</Eyebrow>
       <h1 className="mt-2 font-display text-xl">Every state, from fixed data</h1>
       <div className="mt-6 max-w-md space-y-1.5 text-sm">
-        <Leader label="Text on background" value="#f2f2f3 / #0a0a0b" />
-        <Leader label="YES / NO" value="#22ab94 / #f23645" />
+        <Leader label="Text on background" value="#f6ebdd / #120c08" />
+        <Leader label="Copper accent" value="#e2683c" />
       </div>
 
       <div className="mt-12 max-w-3xl">
