@@ -37,19 +37,21 @@ Dockerfile   Backend container (Railway or any Docker host)
 
 ```mermaid
 flowchart LR
-    U([Buyer wallet]) -->|1. pick market, outcome, N| W[Web app<br/>Next.js + wagmi]
-    W -->|2. POST /quote| B[Backend<br/>Fastify + viem]
-    B -->|best ask p| GP[(Gemini public API<br/>market data)]
-    B -->|3. EIP-712 signed quote| W
-    W -->|4. approve + buyPolicy| C{{Backstop.sol<br/>Arc testnet}}
-    C -->|locks N USDC from treasury| C
-    C -. PolicyPurchased event .-> B
-    B -->|5. buy N contracts| GT[(Gemini trading API<br/>sandbox / live)]
-    GT -. no fill .-> B
-    B -->|cancelAndRefund| C
-    GP -. 6. resolutionSide .-> B
-    B -->|7. resolveMarket + settle| C
-    C -->|8. N USDC payout| U
+    U(["Buyer wallet"]) -->|"1. pick market, outcome, N"| W["Web app<br/>Next.js + wagmi"]
+    W -->|"2. POST /quote"| B["Backend<br/>Fastify + viem"]
+    B -->|"best ask p"| GP[("Gemini public API<br/>market data")]
+    B -->|"3. EIP-712 signed quote"| W
+    W -->|"4. approve + buyPolicy"| C{{"Backstop.sol<br/>Arc testnet"}}
+    C -.->|"PolicyPurchased event"| B
+    B -->|"5. buy N contracts"| GT[("Gemini trading API<br/>sandbox / live")]
+    GT -.->|"no fill"| B
+    B -->|"cancelAndRefund"| C
+    GP -.->|"6. resolutionSide"| B
+    B -->|"7. resolveMarket + settle"| C
+    C -->|"8. N USDC payout"| U
+    B <-->|"findings, decisions"| X[("Grok<br/>xAI API")]
+    B -->|"agent buys from its own wallet"| AG(["Grok agent wallet"])
+    AG -->|"buyPolicy"| C
 ```
 
 **Policy lifecycle**
