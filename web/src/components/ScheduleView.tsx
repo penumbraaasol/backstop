@@ -7,6 +7,7 @@ import type { Market, Outcome } from "@/lib/api";
 import { FAUCET_URL, txUrl } from "@/lib/chain";
 import { condition, countdown, previewPremium, sideText, timeOfDay, usdc } from "@/lib/format";
 import type { BuyResult, BuyStep } from "@/lib/hooks";
+import { RollingNumber } from "./RollingNumber";
 import { Button, cx, ExtLink, Spinner } from "./ui";
 
 export type WalletState = "loading" | "disconnected" | "wrong-chain" | "ready";
@@ -214,7 +215,7 @@ function Filled(props: ScheduleProps & { market: Market }) {
         <div className="mt-3 flex items-baseline justify-between gap-4 border-t border-line-strong pt-3">
           <span className="text-sm font-medium">You pay</span>
           <span className="num font-display text-xl font-semibold tracking-[-0.03em]">
-            {q.valid ? usdc(q.premium) : "—"} <span className="text-md text-fg-2">USDC</span>
+            {q.valid ? <RollingNumber value={usdc(q.premium)} /> : "—"} <span className="text-md text-fg-2">USDC</span>
           </span>
         </div>
         <p className="num mt-1 text-right font-mono text-xs text-fg-2">

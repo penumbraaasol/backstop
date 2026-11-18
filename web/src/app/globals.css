@@ -127,3 +127,13 @@ input[type="number"] {
 }
 .flash-up,
 .flash-down { animation: tick 0.9s ease-out; }
+
+/* ticker tape: two identical rows, moved by half their width, loop seamlessly */
+@keyframes tape {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.tape { animation: tape 90s linear infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .tape { animation: none; }
+}

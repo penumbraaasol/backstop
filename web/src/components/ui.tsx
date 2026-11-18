@@ -4,8 +4,27 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 
 export const cx = (...c: (string | false | null | undefined)[]) => c.filter(Boolean).join(" ");
 
+/**
+ * The Backstop mark: a position (the square) held between two sides.
+ * The white bracket is the buyer's cover, the green one the offsetting Gemini hedge.
+ */
+export function Mark({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} aria-hidden>
+      <path d="M4 9 V28 H23" fill="none" stroke="var(--color-fg)" strokeWidth="4" strokeLinecap="square" />
+      <path d="M9 4 H28 V23" fill="none" stroke="var(--color-up)" strokeWidth="4" strokeLinecap="square" />
+      <rect x="12.5" y="12.5" width="7" height="7" fill="var(--color-fg)" />
+    </svg>
+  );
+}
+
 export function Wordmark() {
-  return <span className="font-display text-[19px] font-semibold tracking-[-0.03em]">Backstop</span>;
+  return (
+    <span className="inline-flex items-center gap-2.5">
+      <Mark className="size-[22px]" />
+      <span className="font-display text-[19px] font-semibold tracking-[-0.03em]">Backstop</span>
+    </span>
+  );
 }
 
 /** A thin ring with one moving arc: a quiet, ink-coloured loading mark. */

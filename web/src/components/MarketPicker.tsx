@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import type { Market, Outcome } from "@/lib/api";
 import { assetOf, categoryLabel, closeLabel, countdown, HORIZONS, horizonOf, sideText, type Horizon } from "@/lib/format";
 import { secondsLeft, useNow, usePriceTicks, type Tick } from "@/lib/hooks";
+import { RollingNumber } from "./RollingNumber";
 import { cx, Ticker } from "./ui";
 
 const ROW = "grid grid-cols-[1fr_auto] items-center gap-4 sm:grid-cols-[minmax(0,1fr)_4.5rem_6rem_auto]";
@@ -275,7 +276,7 @@ function PriceChip({
         changed && dir === -1 && "flash-down",
       )}
     >
-      {price.toFixed(2)}
+      <RollingNumber value={price.toFixed(2)} />
       {changed && dir ? (
         <span
           className={cx(

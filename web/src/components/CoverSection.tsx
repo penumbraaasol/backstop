@@ -6,6 +6,7 @@ import { assetOf, horizonOf, type Horizon } from "@/lib/format";
 import { secondsLeft, useMarkets, useStats } from "@/lib/hooks";
 import { CoverTicket } from "./CoverTicket";
 import { MarketPicker } from "./MarketPicker";
+import { TickerTape } from "./TickerTape";
 
 export function CoverSection() {
   const { data: markets, isLoading, isError, error } = useMarkets();
@@ -37,6 +38,15 @@ export function CoverSection() {
   }, [selected, symbol]);
 
   return (
+    <>
+      <TickerTape
+        onPick={(m) => {
+          setCategory(m.category);
+          if (m.category === "crypto") setHorizon(horizonOf(m));
+          setAsset("ALL");
+          setSymbol(m.instrumentSymbol);
+        }}
+      />
     <section id="cover" className="mx-auto max-w-[1240px] px-5 pb-20 pt-14 sm:px-8 sm:pt-20">
       <Intro marketCount={markets?.length} />
       <div className="mt-12 grid items-start gap-5 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
@@ -84,6 +94,7 @@ export function CoverSection() {
         </div>
       </div>
     </section>
+    </>
   );
 }
 
