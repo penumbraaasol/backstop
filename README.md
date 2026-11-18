@@ -288,7 +288,16 @@ corepack pnpm dev               # http://localhost:3000
 5. **Decide.** Grok (structured output) picks one candidate or holds, and must cite the numbers. Every decision is logged and shown in the app.
 6. **Re-check and buy.** The server re-validates the pick (size ≤ 1.5× suggested, asset not already covered, live price ≤ decided price + 2¢) and buys through the same signed-quote → `buyPolicy` path as a human.
 
-**Safety limits:** 10 USDC max payout per policy · 25 USDC of premiums per UTC day (refunds don't count) · balance check · one purchase at a time · one open policy per asset · at most one decision per 45 s · on/off switch (`AGENT_ENABLED`, and the autopilot toggle in the app) · chat purchases only on an explicit request, with a server-side guard that disables buying when the user says not to buy · the contract's own per-policy and per-market caps.
+**Safety limits:**
+- 10 USDC max payout per policy
+- 25 USDC of premiums per UTC day (refunds don't count)
+- Balance check
+- One purchase at a time
+- One open policy per asset
+- At most one decision per 45 s
+- On/off switch (`AGENT_ENABLED`, and the autopilot toggle in the app)
+- Chat purchases only on an explicit request, with a server-side guard that disables buying when the user says not to buy
+- The contract's own per-policy and per-market caps.
 
 ## Technologies and sponsor tools
 
