@@ -26,8 +26,8 @@
 
   /* colour: each one has a single job */
   --color-bg: #0a0a0b;          /* page */
-  --color-surface: #121214;     /* panels */
-  --color-surface-2: #1a1a1d;   /* inputs, hover, selected row */
+  --color-surface: #000000;     /* panels: true black, a shade darker than the page */
+  --color-surface-2: #111113;   /* inputs, hover, selected row */
   --color-line: #242428;        /* hairlines */
   --color-line-strong: #36363c; /* input borders, emphasised rules */
   --color-fg: #f2f2f3;          /* primary text */

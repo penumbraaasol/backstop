@@ -257,8 +257,19 @@ async function decide(mandate: string, findings: Finding[], passing: Candidate[]
 // --- loop ------------------------------------------------------------------------------------------
 let running = false;
 
+/** Value the holdings at Gemini spot, so the app shows them even while the autopilot is off. */
+async function refreshValuation() {
+  const v: typeof lastValuation = [];
+  for (const h of holdings()) {
+    const spot = await getSpot(h.asset);
+    v.push({ ...h, spot: spot ?? null, valueUsd: spot ? spot * h.amount : null });
+  }
+  lastValuation = v;
+}
+
 /** Called by the job loop after each screener pass. */
 export async function runAutopilot(findings: Finding[], markets: MarketView[]) {
+  await refreshValuation().catch(() => undefined);
   const st = autopilotState();
   if (!st.enabled || !agentEnabled() || running) return;
   const t = now();
