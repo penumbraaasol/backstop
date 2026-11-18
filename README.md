@@ -7,7 +7,8 @@
 > Chain award: Best use of Arc<br>
 > Bounties: Gemini Prediction Markets, Grok Bot
 
-**Live app:** https://backstop-phi.vercel.app<br>
+**Live app:** https://backstop-hq.vercel.app<br>
+**Backend API:** https://backstop-production-0e6db23c.up.railway.app/health<br>
 **Demo video:** _added after recording_<br>
 **Contract:** [`0x3c7c…4A05` on Arc testnet](https://explorer.testnet.arc.io/address/0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05)
 
