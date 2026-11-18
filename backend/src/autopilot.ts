@@ -281,7 +281,7 @@ export async function runAutopilot(findings: Finding[], markets: MarketView[]) {
 
     // everything held is covered: say so without spending a Grok call
     if (book.every((h) => covered.has(h.asset))) {
-      logEvent("decision", "Hold · portfolio fully covered", {
+      logEvent("decision", "Hold\nportfolio fully covered", {
         detail: `${[...covered].join(" and ")} already have active cover. Waiting for those windows to settle. (${reviewed})`,
       });
       return;
@@ -291,16 +291,16 @@ export async function runAutopilot(findings: Finding[], markets: MarketView[]) {
     const pick = d.instrumentSymbol ? passing.find((c) => c.market.instrumentSymbol === d.instrumentSymbol) : undefined;
 
     if (d.action !== "buy" || !pick) {
-      logEvent("decision", `Hold · ${d.headline}`, { detail: `${d.reasoning} (${reviewed})` });
+      logEvent("decision", `Hold\n${d.headline}`, { detail: `${d.reasoning} (${reviewed})` });
       return;
     }
     // server-side re-check of Grok's pick: size within bounds, asset not covered meanwhile
     const payout = Math.max(1, Math.min(pick.maxPayout, d.payout ?? pick.suggestedPayout));
     if (activePolicyAssets().has(pick.asset)) {
-      logEvent("decision", `Hold · ${pick.asset} already covered`, { detail: d.reasoning, symbol: pick.market.instrumentSymbol });
+      logEvent("decision", `Hold\n${pick.asset} already covered`, { detail: d.reasoning, symbol: pick.market.instrumentSymbol });
       return;
     }
-    logEvent("decision", `Buy · ${d.headline}`, {
+    logEvent("decision", `Buy\n${d.headline}`, {
       detail: `${d.reasoning} [spot $${pick.spot.toLocaleString("en-US", { maximumFractionDigits: 2 })}, strike ${pct(pick.distance)}, ${pick.cost.toFixed(2)} per $1, ${payout} USDC vs ≈$${Math.round(pick.holdingValue * RULES.hedgeMove)} loss on a 1% drop] (${reviewed})`,
       symbol: pick.market.instrumentSymbol,
     });

@@ -7,6 +7,9 @@ import { GrokMark } from "./logos";
 import { useNow } from "@/lib/hooks";
 import { cx, ExtLink, Spinner } from "./ui";
 
+/** separators from older log entries become line breaks */
+const lines = (t: string) => t.replace(/\s+·\s+/g, "\n");
+
 const ago = (unix: number | null, now: number) => {
   if (!unix) return "not yet";
   const s = Math.max(0, Math.floor(now / 1000 - unix));
@@ -27,7 +30,7 @@ export function AgentJobs() {
       </div>
     );
   return (
-    <div className="flex h-[640px] flex-col gap-3">
+    <div className="flex flex-col gap-3">
       <AutopilotCard ap={data.jobs.autopilot} now={now} />
       <Jobs jobs={data.jobs} now={now} />
       <Feed events={data.events.filter((e) => e.kind !== "error" && !/refunded|hedge didn't fill|rejected/i.test(e.title))} now={now} />
@@ -41,13 +44,13 @@ function Jobs({ jobs, now }: { jobs: AgentActivity["jobs"]; now: number }) {
     {
       name: "Market screener",
       what: `Reads every live Gemini market, flags price jumps of 8¢+, cheap tail cover and new windows`,
-      metric: `${jobs.screener.marketsScanned} markets · ${jobs.screener.findings} findings`,
+      metric: `${jobs.screener.marketsScanned} markets\n${jobs.screener.findings} findings`,
       stat: jobs.screener,
     },
     {
       name: "On-chain watcher",
       what: "Follows the agent's policies on Arc and the treasury's free liquidity",
-      metric: `${jobs.onchain.policiesTracked} open · treasury ${jobs.onchain.freeLiquidityUsdc ?? "–"} USDC`,
+      metric: `${jobs.onchain.policiesTracked} open\ntreasury ${jobs.onchain.freeLiquidityUsdc ?? "–"} USDC`,
       stat: jobs.onchain,
     },
   ];
@@ -67,7 +70,7 @@ function Jobs({ jobs, now }: { jobs: AgentActivity["jobs"]; now: number }) {
               </p>
               <span className="num font-mono text-[11px] text-fg-3">{ago(r.stat.lastRunAt, now)}</span>
             </div>
-            <p className="mt-0.5 text-xs text-fg-2">{r.stat.lastError ? <span className="text-down">{r.stat.lastError}</span> : r.metric}</p>
+            <p className="mt-0.5 whitespace-pre-line text-xs text-fg-2">{r.stat.lastError ? <span className="text-down">{r.stat.lastError}</span> : r.metric}</p>
           </li>
         ))}
         <Watches jobs={jobs} now={now} />
@@ -100,8 +103,11 @@ function Watches({ jobs, now }: { jobs: AgentActivity["jobs"]; now: number }) {
             <li key={w.id} className="rounded-xl bg-surface-2 px-3 py-2">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-medium">
-                  #{w.id} · {w.asset} <span className={w.outcome === "yes" ? "text-up" : "text-down"}>{w.outcome.toUpperCase()}</span> ·{" "}
-                  {w.payout} USDC · every {w.horizon} · max {w.maxPrice.toFixed(2)}
+                  #{w.id} {w.asset} <span className={w.outcome === "yes" ? "text-up" : "text-down"}>{w.outcome.toUpperCase()}</span>
+                  <br />
+                  {w.payout} USDC, every {w.horizon}
+                  <br />
+                  max {w.maxPrice.toFixed(2)}
                 </p>
                 <button
                   onClick={() => stop.mutate(w.id)}
@@ -112,7 +118,9 @@ function Watches({ jobs, now }: { jobs: AgentActivity["jobs"]; now: number }) {
                 </button>
               </div>
               <p className="mt-0.5 text-[11px] text-fg-2">
-                {w.lastResult ?? "Waiting for the next scan"} <span className="text-fg-3">· {ago(w.lastRun, now)}</span>
+                {w.lastResult ?? "Waiting for the next scan"}
+                <br />
+                <span className="text-fg-3">{ago(w.lastRun, now)}</span>
               </p>
             </li>
           ))}
@@ -188,18 +196,27 @@ function AutopilotCard({ ap, now }: { ap: Autopilot; now: number }) {
             <dt className="text-[11px] text-fg-2">Holding</dt>
             <dd className="num text-sm font-medium">
               {h.amount} {h.asset}
-              {h.valueUsd !== null && <span className="text-fg-2"> · ${Math.round(h.valueUsd).toLocaleString("en-US")}</span>}
+              {h.valueUsd !== null && <span className="block text-xs text-fg-2">${Math.round(h.valueUsd).toLocaleString("en-US")}</span>}
             </dd>
           </div>
         ))}
       </dl>
       <p className="mt-2 text-[11px] leading-relaxed text-fg-3">
-        Rules: downside cover only · strike {ap.rules.minDistance * 100}% to +{ap.rules.maxDistance * 100}% of spot · {ap.rules.minCost.toFixed(2)}–
-        {ap.rules.maxCost.toFixed(2)} per $1 · size ≈ loss on a {ap.rules.hedgeMove * 100}% drop · one policy per asset
+        Rules:
+        <br />
+        downside cover only
+        <br />
+        strike {ap.rules.minDistance * 100}% to +{ap.rules.maxDistance * 100}% of spot
+        <br />
+        {ap.rules.minCost.toFixed(2)}–{ap.rules.maxCost.toFixed(2)} per $1
+        <br />
+        size ≈ loss on a {ap.rules.hedgeMove * 100}% drop
+        <br />
+        one policy per asset
       </p>
-      <p className="mt-1.5 text-[11px] text-fg-3">
+      <p className="mt-1.5 whitespace-pre-line text-[11px] text-fg-3">
         {ap.enabled
-          ? `Reviews every finding and at least every ${Math.round(ap.reviewEverySec / 60)} min · last decision ${ago(ap.lastDecisionAt, now)}`
+          ? `Reviews every finding and at least every ${Math.round(ap.reviewEverySec / 60)} min\nlast decision ${ago(ap.lastDecisionAt, now)}`
           : "Off. Findings are logged, but Grok won't act on them."}
       </p>
     </div>
@@ -218,7 +235,7 @@ const KIND: Record<AgentEvent["kind"], { label: string; cls: string }> = {
 
 function Feed({ events, now }: { events: AgentEvent[]; now: number }) {
   return (
-    <div className="flex min-h-0 flex-1 flex-col rounded-[22px] border border-line bg-surface">
+    <div className="flex max-h-[420px] min-h-[240px] flex-col rounded-[22px] border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-5 py-3">
         <p className="text-sm font-semibold tracking-tight">Activity</p>
         <p className="flex items-center gap-1.5 text-[11px] text-fg-3">
@@ -238,13 +255,13 @@ function Feed({ events, now }: { events: AgentEvent[]; now: number }) {
                   ) : (
                     <span className={cx("mr-2 text-[10px] font-semibold uppercase tracking-[0.08em]", KIND[e.kind].cls)}>{KIND[e.kind].label}</span>
                   )}
-                  <span className={cx(e.kind === "decision" && e.title.startsWith("Buy") && "font-medium text-up")}>{e.title}</span>
+                  <span className={cx("whitespace-pre-line", e.kind === "decision" && e.title.startsWith("Buy") && "font-medium text-up")}>{lines(e.title)}</span>
                 </p>
                 <span className="num shrink-0 font-mono text-[11px] text-fg-3">{ago(e.at, now)}</span>
               </div>
               {(e.detail || e.url) && (
-                <p className={cx("mt-0.5 text-xs", e.kind === "decision" ? "text-fg" : "text-fg-2")}>
-                  {e.detail}
+                <p className={cx("mt-0.5 whitespace-pre-line text-xs", e.kind === "decision" ? "text-fg" : "text-fg-2")}>
+                  {e.detail && lines(e.detail)}
                   {e.url && (
                     <ExtLink href={e.url} className="ml-1.5 font-mono">
                       tx ↗

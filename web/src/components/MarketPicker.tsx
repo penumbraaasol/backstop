@@ -153,8 +153,8 @@ export function MarketPicker({
           ))}
         </ul>
       )}
-      <p className="mt-3 flex flex-wrap gap-x-4 font-mono text-[11px] text-fg-3">
-        <span>Gemini best ask · per $1 payout</span>
+      <p className="mt-3 flex flex-col gap-0.5 font-mono text-[11px] text-fg-3">
+        <span>Gemini best ask, per $1 payout</span>
         <span>bar: YES / NO odds</span>
         <span>updates 5 s</span>
       </p>
@@ -201,7 +201,7 @@ function MarketRow({
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-fg">{sideText(m, "yes")}</p>
             <p className="truncate text-xs text-fg-2">
-              <span className="num font-mono sm:hidden">in {countdown(left)} · </span>
+              <span className="num block font-mono sm:hidden">in {countdown(left)}</span>
               {m.title}
             </p>
             {/* implied odds: YES share vs NO share of the two asks */}

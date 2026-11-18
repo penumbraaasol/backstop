@@ -104,7 +104,11 @@ export function PolicyEntry({ p, times }: { p: PolicyTimeline; times: StepTimes 
             <span className="ml-3 align-middle font-mono text-xs font-normal text-fg-2">{p.instrumentSymbol}</span>
           </h3>
           <p className="num mt-0.5 text-sm text-fg-2">
-            {p.marketTitle ?? "Gemini market"} · pays if {side} · {usdc(p.premiumUsdc)} USDC for {usdc(p.payoutUsdc)} USDC
+            {p.marketTitle ?? "Gemini market"}
+            <br />
+            pays if {side}
+            <br />
+            {usdc(p.premiumUsdc)} USDC for {usdc(p.payoutUsdc)} USDC
           </p>
         </div>
         <Status tone={st.tone}>{st.label}</Status>

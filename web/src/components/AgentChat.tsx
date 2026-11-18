@@ -83,7 +83,7 @@ export function AgentChat({ seed }: { seed?: ChatMessage[] } = {}) {
         <p className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <GrokMark className="size-5 text-fg" />
           Grok
-          <span className="font-normal text-fg-3">· hedging agent</span>
+          <span className="font-normal text-fg-3">hedging agent</span>
         </p>
         {!empty && (
           <button
@@ -206,7 +206,7 @@ function Steps({ steps }: { steps: ChatStep[] }) {
       <button onClick={() => setOpen((o) => !o)} className="flex items-center gap-1.5 text-xs text-fg-2 hover:text-fg">
         <ChevronDown className={cx("size-3.5 transition-transform", !open && "-rotate-90")} />
         Used {steps.length} tool{steps.length > 1 ? "s" : ""}
-        {failed > 0 && <span className="text-warn">· {failed} failed</span>}
+        {failed > 0 && <span className="text-warn">({failed} failed)</span>}
       </button>
       {open && (
         <ol className="mt-2 space-y-1.5 border-l border-line pl-4">
@@ -217,8 +217,8 @@ function Steps({ steps }: { steps: ChatStep[] }) {
                   {s.ok ? <Check className="size-2.5" strokeWidth={3} /> : <X className="size-2.5" strokeWidth={3} />}
                 </span>
                 <span>
-                  <span className={cx(s.tool === "buy_cover" && s.ok ? "font-medium text-up" : "text-fg")}>{s.label}</span>
-                  {s.detail && <span className="text-fg-2"> · {s.detail}</span>}
+                  <span className={cx("whitespace-pre-line", s.tool === "buy_cover" && s.ok ? "font-medium text-up" : "text-fg")}>{s.label.replace(/\s+·\s+/g, "\n")}</span>
+                  {s.detail && <span className="block whitespace-pre-line text-fg-2">{s.detail.replace(/\s+·\s+/g, "\n")}</span>}
                   {s.url && (
                     <ExtLink href={s.url} className="ml-1.5 font-mono text-fg-2">
                       tx ↗

@@ -41,7 +41,7 @@ export function TickerTape({ onPick }: { onPick?: (m: Market) => void }) {
         >
           <span className="font-mono font-semibold text-fg">{assetOf(m)}</span>
           <span className="num text-fg-2">{short(m)}</span>
-          <span className="num text-fg-3">· {closeLabel(m.expiry)}</span>
+          <span className="num text-fg-3">{closeLabel(m.expiry)}</span>
           <span className="num ml-1 font-mono text-up">Y {m.askYes.toFixed(2)}</span>
           <span className="num font-mono text-down">N {m.askNo.toFixed(2)}</span>
           <span className={cx("w-2 text-[9px]", t?.yesDir === 1 ? "text-up" : "text-down")}>

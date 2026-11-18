@@ -88,7 +88,11 @@ export function ConnectButton({ className, block, compact }: { className?: strin
       </button>
       {open && (
         <div className="absolute right-0 z-50 mt-1 w-60 rounded-md border border-line-strong bg-surface py-1 text-sm shadow-[4px_4px_0_0_var(--color-line)]">
-          <p className="border-b border-line px-3 py-2 text-xs text-fg-2">Arc Testnet · {shortAddr(address)}</p>
+          <p className="border-b border-line px-3 py-2 text-xs text-fg-2">
+            Arc Testnet
+            <br />
+            {shortAddr(address)}
+          </p>
           <MenuItem onClick={() => navigator.clipboard.writeText(address!)}>Copy address</MenuItem>
           <MenuItem href={addressUrl(address!)}>View on Arc explorer</MenuItem>
           <MenuItem href={FAUCET_URL}>Get testnet USDC</MenuItem>

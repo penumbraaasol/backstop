@@ -195,7 +195,7 @@ async function runTool(name: string, rawArgs: string, steps: Step[], lastUserTex
           tool: name,
           ok: true,
           label: `Screened ${all.length} ${cfg.MOCK_MARKETS ? "sample" : "live Gemini"} markets`,
-          detail: `${hits.length} match${asset ? ` ${asset}` : ""}${horizon ? ` · ${horizon}` : ""}`,
+          detail: `${hits.length} match${asset ? ` ${asset}` : ""}${horizon ? `\n${horizon} windows` : ""}`,
         });
         return { markets: hits.slice(0, 15).map(compact) };
       }
@@ -206,7 +206,7 @@ async function runTool(name: string, rawArgs: string, steps: Step[], lastUserTex
             "SELECT policy_id, instrument_symbol, outcome, payout, premium, status, hedge_status, hedge_fill_price FROM policies WHERE buyer = ? ORDER BY policy_id DESC LIMIT 8",
           )
           .all((agentAddress ?? "").toLowerCase()) as Record<string, unknown>[];
-        steps.push({ tool: name, ok: true, label: "Read agent wallet and policies on Arc", detail: `${formatUsdc(balance)} USDC · ${policies.length} policies` });
+        steps.push({ tool: name, ok: true, label: "Read agent wallet and policies on Arc", detail: `${formatUsdc(balance)} USDC\n${policies.length} policies` });
         return {
           wallet: agentAddress,
           balanceUsdc: formatUsdc(balance),
@@ -273,7 +273,7 @@ async function runTool(name: string, rawArgs: string, steps: Step[], lastUserTex
           tool: name,
           ok: true,
           label: `Started watch #${id}`,
-          detail: `${w.asset.toUpperCase()} ${w.outcome.toUpperCase()} · every ${w.horizon} window · max ${w.maxPrice.toFixed(2)}`,
+          detail: `${w.asset.toUpperCase()} ${w.outcome.toUpperCase()}\nevery ${w.horizon} window\nmax ${w.maxPrice.toFixed(2)}`,
         });
         return { watchId: id, runsEverySec: Math.round(cfg.SCREENER_INTERVAL_MS / 1000) };
       }
@@ -295,7 +295,7 @@ async function runTool(name: string, rawArgs: string, steps: Step[], lastUserTex
         steps.push({
           tool: name,
           ok: true,
-          label: `Autopilot ${st.enabled ? "on" : "off"}${p.mandate ? " · new mandate" : ""}${p.holdings ? " · new holdings" : ""}`,
+          label: `Autopilot ${st.enabled ? "on" : "off"}${p.mandate ? "\nnew mandate" : ""}${p.holdings ? "\nnew holdings" : ""}`,
           detail: p.holdings ? p.holdings.map((h) => `${h.amount} ${h.asset.toUpperCase()}`).join(", ") : p.mandate ? st.mandate : undefined,
         });
         return st;

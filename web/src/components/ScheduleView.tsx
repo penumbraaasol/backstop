@@ -127,7 +127,8 @@ function Filled(props: ScheduleProps & { market: Market }) {
       <Field label="Event">
         <p className="font-medium">{market.title}</p>
         <p className="num text-xs text-fg-2">
-          Closes {timeOfDay(market.expiry)} ·{" "}
+          Closes {timeOfDay(market.expiry)}
+          <br />
           <span className={cx("font-mono", left < 120 && "text-warn")}>in {countdown(left)}</span>
         </p>
       </Field>

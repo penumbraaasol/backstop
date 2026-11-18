@@ -9,7 +9,7 @@ const sans = Schibsted_Grotesk({ subsets: ["latin"], variable: "--font-sans-face
 const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
 export const metadata: Metadata = {
-  title: { default: "Backstop · Event cover in USDC", template: "%s · Backstop" },
+  title: { default: "Backstop | Event cover in USDC", template: "%s | Backstop" },
   description:
     "Pay a USDC premium on Arc and get paid if an event happens. Priced from Gemini prediction-market odds and hedged on Gemini.",
   icons: { icon: "/icon.svg" },
