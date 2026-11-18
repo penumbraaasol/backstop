@@ -14,7 +14,7 @@ export function useMounted() {
   return m;
 }
 
-export function ConnectButton({ className, block }: { className?: string; block?: boolean }) {
+export function ConnectButton({ className, block, compact }: { className?: string; block?: boolean; compact?: boolean }) {
   const mounted = useMounted();
   const { address, isConnected } = useConnection();
   const chainId = useChainId();
@@ -32,7 +32,7 @@ export function ConnectButton({ className, block }: { className?: string; block?
     return () => document.removeEventListener("mousedown", close);
   }, []);
 
-  const w = block ? "w-full py-3" : "";
+  const w = block ? "w-full py-3" : compact ? "h-9 px-3.5 py-0 text-[13px]" : "";
 
   if (!mounted) return <div className={cx("placeholder h-10 w-36", block && "w-full", className)} />;
 
@@ -79,7 +79,7 @@ export function ConnectButton({ className, block }: { className?: string; block?
     <div ref={ref} className={cx("relative", className)}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-3 rounded-md border border-line bg-surface py-2 pl-3 pr-2 text-sm transition-colors hover:border-line-strong"
+        className={cx("flex items-center gap-3 rounded-md border border-line bg-surface pl-3 pr-2 text-sm transition-colors hover:border-line-strong", compact ? "h-9" : "py-2")}
       >
         <span className="num font-medium">{usdc} USDC</span>
         <span className="h-4 w-px bg-line" />

@@ -149,8 +149,8 @@ export function MarketPicker({
         </ul>
       )}
       <p className="mt-3 text-xs text-fg-2">
-        Prices are Gemini&apos;s best ask, in USDC per 1 USDC of payout, refreshed every 5 seconds. The thin line under
-        each row shows how much of the market&apos;s window has passed.
+        Prices are Gemini&apos;s best ask, in USDC per 1 USDC of payout, refreshed every 5 seconds. The bar under each
+        market shows the implied odds: YES on the left, NO on the right.
       </p>
     </div>
   );
@@ -206,6 +206,9 @@ function MarketRow({
               <span className="rounded-l-full bg-up/70" style={{ width: `${yesShare * 100}%` }} />
               <span className="flex-1 rounded-r-full bg-down/60" />
             </div>
+            {elapsed !== null && (
+              <p className="num mt-1 text-[11px] text-fg-3">{Math.round(elapsed * 100)}% of window passed</p>
+            )}
           </div>
         </div>
         <div className="hidden justify-end sm:flex">
@@ -232,13 +235,7 @@ function MarketRow({
           ))}
         </div>
       </div>
-      {elapsed !== null && (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute bottom-0 left-0 h-px bg-fg-3"
-          style={{ width: `${elapsed * 100}%` }}
-        />
-      )}
+
     </li>
   );
 }

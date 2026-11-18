@@ -2,9 +2,16 @@
 
 import { useMemo } from "react";
 import type { Market } from "@/lib/api";
-import { assetOf, countdown, sideText } from "@/lib/format";
+import { assetOf, closeLabel, countdown } from "@/lib/format";
 import { secondsLeft, useMarkets, useNow, usePriceTicks } from "@/lib/hooks";
 import { cx } from "./ui";
+
+/** "≥ $64,250", "≥ $4,100", or "up" for windows without a strike yet. */
+function short(m: Market) {
+  if (!m.strike) return "up vs open";
+  const n = Number(m.strike);
+  return `≥ $${n.toLocaleString("en-US", { maximumFractionDigits: n < 10 ? 3 : 0 })}`;
+}
 
 /**
  * A TradingView-style ticker tape of live markets. Scrolls continuously, pauses on hover,
@@ -30,15 +37,17 @@ export function TickerTape({ onPick }: { onPick?: (m: Market) => void }) {
           key={`${copy}-${m.instrumentSymbol}`}
           onClick={() => onPick?.(m)}
           tabIndex={copy ? -1 : 0}
-          className="flex shrink-0 items-center gap-2.5 border-r border-line px-5 text-xs hover:bg-surface-2"
+          className="flex shrink-0 items-center gap-2 whitespace-nowrap px-4 text-xs transition-colors hover:bg-surface-2"
         >
-          <span className="font-mono font-medium text-fg">{assetOf(m)}</span>
-          <span className="max-w-[16rem] truncate text-fg-2">{sideText(m, "yes")}</span>
-          <span className="num font-mono text-up">Y {m.askYes.toFixed(2)}</span>
+          <span className="font-mono font-semibold text-fg">{assetOf(m)}</span>
+          <span className="num text-fg-2">{short(m)}</span>
+          <span className="num text-fg-3">· {closeLabel(m.expiry)}</span>
+          <span className="num ml-1 font-mono text-up">Y {m.askYes.toFixed(2)}</span>
           <span className="num font-mono text-down">N {m.askNo.toFixed(2)}</span>
-          {t?.yesDir ? (
-            <span className={cx("text-[9px]", t.yesDir === 1 ? "text-up" : "text-down")}>{t.yesDir === 1 ? "▲" : "▼"}</span>
-          ) : null}
+          <span className={cx("w-2 text-[9px]", t?.yesDir === 1 ? "text-up" : "text-down")}>
+            {t?.yesDir === 1 ? "▲" : t?.yesDir === -1 ? "▼" : ""}
+          </span>
+          <span className="ml-3 h-3 w-px bg-line-strong" aria-hidden />
         </button>
       );
     });
@@ -62,12 +71,12 @@ export function TickerTape({ onPick }: { onPick?: (m: Market) => void }) {
           </span>
         )}
       </div>
-      <div className="group relative min-w-0 flex-1 overflow-hidden">
+      {/* both edges fade, so items slide in and out instead of being cut off */}
+      <div className="group relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(to_right,transparent,black_48px,black_calc(100%-48px),transparent)]">
         <div className="tape flex h-full w-max items-stretch group-hover:[animation-play-state:paused]">
           {row(0)}
           {row(1)}
         </div>
-        <span className="pointer-events-none absolute inset-y-0 right-0 w-16 bg-gradient-to-l from-bg to-transparent" />
       </div>
     </div>
   );

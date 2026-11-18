@@ -43,18 +43,21 @@ export function Nav() {
             })}
           </div>
         </div>
-        <div className="flex items-center gap-5">
-          <p className="hidden items-center gap-2 text-xs text-fg-2 xl:flex">
-            <span>Settled on</span>
-            <ArcLogo className="h-3.5 w-auto text-fg" />
-            <span className="mx-1 h-3 w-px bg-line-strong" />
-            <span>Hedged on</span>
-            <GeminiLogo className="h-3 w-auto text-fg" />
-            <span className="mx-1 h-3 w-px bg-line-strong" />
-            <span>Performed by</span>
-            <GrokLogo className="h-4 w-auto text-fg" />
-          </p>
-          <ConnectButton />
+        <div className="flex items-center gap-6">
+          {/* the three platforms: logos from 1024px, with their roles once there's room */}
+          <ul className="hidden items-center text-xs text-fg-2 lg:flex" aria-label="Built on">
+            {[
+              { role: "Settled on", logo: <ArcLogo className="h-[15px] w-auto" /> },
+              { role: "Hedged on", logo: <GeminiLogo className="h-[12px] w-auto" /> },
+              { role: "Performed by", logo: <GrokLogo className="h-[17px] w-auto" /> },
+            ].map((p, i) => (
+              <li key={p.role} className={cx("flex h-5 items-center gap-2 text-fg", i > 0 && "ml-4 border-l border-line-strong pl-4")}>
+                <span className="hidden text-fg-2 xl:inline">{p.role}</span>
+                {p.logo}
+              </li>
+            ))}
+          </ul>
+          <ConnectButton compact />
         </div>
       </nav>
       {/* phone: the same pages as a scrollable row */}
