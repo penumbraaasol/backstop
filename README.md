@@ -84,7 +84,7 @@ Components:
 | Backstop (verified source) | [`0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05`](https://explorer.testnet.arc.io/address/0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05) |
 
 Roles: owner `0x6D40a8B185B74574052c58Bb322618eE543a366b`, quote signer `0x87bCbF155ab2e4729D6eE7F2feff3a26600936C2`, resolver `0x91cD37e12d6dD26ac9c98af21d346DF9502C55b7`.
-Demo config: max payout 5 USDC per policy, max exposure 12 USDC per market, refund grace period 24 h, treasury seeded with 12 USDC (testnet faucet limits).
+Demo config: max payout 20 USDC per policy, max exposure 50 USDC per market, refund grace period 24 h. Treasury seeded with 12 USDC, topped up to about 95 USDC free liquidity on Nov 18 ([deposit tx](https://explorer.testnet.arc.io/tx/0xbcc5d985167dd9b9d7c78e0b76f14aea0dd56a7ae639e2be2930e291f1d5b16b), [caps tx](https://explorer.testnet.arc.io/tx/0xb159d532218c02a16bc2a4feeb68d59b847d3f129a9e1aa389faf0c467870314)).
 
 ## Verified on Arc testnet
 
