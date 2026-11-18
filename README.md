@@ -251,7 +251,7 @@ The e2e script picks the next priced BTC 5-minute market, gets a signed quote, a
 - **My cover**: every policy for the connected wallet with a four-step timeline (purchased → hedged on Gemini → resolved → paid out / expired / refunded), each linked to its Arc transaction.
 - **How it works**: pricing, hedging, the worked example, and the buyer protections.
 
-Design: warm black and copper, after the finance sites in minimal.gallery (Xapo, Pipe, Aspen) and TradingView. One copper accent for the buy action, the chosen side, payouts and the agent's actions; every quiet tone is brown or sand, with no neutral grey and no red/green decoration. Geist and Geist Mono, hairline borders, no gradients or glows. All design tokens live in `web/src/app/globals.css`. In `pnpm dev`, `/preview` renders every UI state from fixed data for design review; it returns 404 in production builds.
+Design: a dark, professional trading-app look inspired by TradingView and modern fintech sites. Near-black background, white primary action, Geist and Geist Mono, hairline borders, green and red only for YES/NO and paid/failed states, and no gradients or glows. The premium is laid out as a receipt and each policy as a tracking log. All design tokens live in `web/src/app/globals.css`. In `pnpm dev`, `/preview` renders every UI state (empty, loading, pending, issued, error, hedging, paid out, expired, refunded) from fixed data for design review. It returns 404 in production builds.
 
 Wallets: any injected wallet (MetaMask, Rabby). The app offers to add and switch to Arc Testnet. Test USDC comes from [faucet.circle.com](https://faucet.circle.com).
 

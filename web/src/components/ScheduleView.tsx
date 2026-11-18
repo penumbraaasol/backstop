@@ -133,18 +133,18 @@ function Filled(props: ScheduleProps & { market: Market }) {
                 onClick={() => setOutcome(o)}
                 className={cx(
                   "flex items-center gap-3 rounded-sm border px-3 py-2 text-left transition-colors",
-                  on ? "border-primary bg-primary/10" : "border-line hover:border-line-strong",
+                  on ? "border-fg-3 bg-surface-2" : "border-line hover:border-line-strong",
                 )}
               >
                 <span
                   className={cx(
                     "flex size-4 shrink-0 items-center justify-center rounded-full border",
-                    on ? "border-primary bg-primary" : "border-fg-3",
+                    on ? "border-line-strong bg-fg" : "border-fg-3",
                   )}
                 >
                   {on && <span className="size-1.5 rounded-full bg-bg" />}
                 </span>
-                <span className={cx("w-8 text-xs font-semibold uppercase tracking-[0.08em]", o === "yes" ? "text-fg" : "text-fg-2")}>{o}</span>
+                <span className={cx("w-8 text-xs font-semibold uppercase tracking-[0.08em]", o === "yes" ? "text-up" : "text-down")}>{o}</span>
                 <span className="flex-1 text-sm">{sideText(market, o)}</span>
                 <span className="num font-mono text-xs text-fg-2">{p.toFixed(2)}</span>
               </button>

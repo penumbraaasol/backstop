@@ -202,8 +202,8 @@ function MarketRow({
               className="mt-1.5 flex h-[3px] w-full max-w-[200px] gap-px overflow-hidden rounded-full"
               title={`Implied odds: YES ${Math.round(yesShare * 100)}%, NO ${Math.round((1 - yesShare) * 100)}%`}
             >
-              <span className="rounded-l-full bg-fg-2/70" style={{ width: `${yesShare * 100}%` }} />
-              <span className="flex-1 rounded-r-full bg-line-strong" />
+              <span className="rounded-l-full bg-up/70" style={{ width: `${yesShare * 100}%` }} />
+              <span className="flex-1 rounded-r-full bg-down/60" />
             </div>
           </div>
         </div>
@@ -264,11 +264,13 @@ function PriceChip({
       onClick={onClick}
       className={cx(
         "num relative w-[4.5rem] rounded-sm py-1.5 text-sm font-semibold transition-colors",
-        on
-            ? "bg-primary text-primary-fg"
-            : yes
-              ? "bg-fg-2/15 text-fg hover:bg-fg-2/25"
-              : "bg-surface-2 text-fg-2 ring-1 ring-inset ring-line-strong hover:text-fg",
+        yes
+          ? on
+            ? "bg-up text-bg"
+            : "bg-up/10 text-up hover:bg-up/20"
+          : on
+            ? "bg-down text-bg"
+            : "bg-down/10 text-down hover:bg-down/20",
         changed && dir === 1 && "flash-up",
         changed && dir === -1 && "flash-down",
       )}
@@ -278,7 +280,7 @@ function PriceChip({
         <span
           className={cx(
             "absolute right-1.5 top-1 text-[8px] leading-none",
-            on ? "text-primary-fg" : "text-primary",
+            on ? "text-bg" : dir === 1 ? "text-up" : "text-down",
           )}
         >
           {dir === 1 ? "▲" : "▼"}
@@ -304,7 +306,7 @@ function Sparkline({ series }: { series?: number[] }) {
   const pts = series.map((v, i) => [(i / (series.length - 1)) * W, H - 3 - ((v - min) / span) * (H - 6)] as const);
   const d = pts.map(([x, y], i) => `${i ? "L" : "M"}${x.toFixed(1)},${y.toFixed(1)}`).join("");
   const delta = series[series.length - 1]! - series[0]!;
-  const color = "var(--color-fg-2)"; // one quiet sand line; the arrows on the chips carry direction
+  const color = delta > 0 ? "var(--color-up)" : delta < 0 ? "var(--color-down)" : "var(--color-fg-3)";
   const [lx, ly] = pts[pts.length - 1]!;
   return (
     <svg width={W} height={H} role="img" aria-label={`YES ${delta >= 0 ? "up" : "down"} ${Math.abs(delta).toFixed(2)} since the page opened`}>

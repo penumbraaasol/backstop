@@ -2,8 +2,8 @@
 
 /*
  * Design tokens: the only place colours, fonts, radii and the type scale are defined.
- * Direction: warm black and copper, after Xapo and Pipe. One accent, no grey, no red/green
- * decoration, hairline borders, no gradients or glows.
+ * Direction: a professional trading app. Near-black, white primary action,
+ * green/red only for YES/NO and paid/failed, hairline borders, no gradients or glows.
  */
 @theme {
   /* type */
@@ -24,20 +24,20 @@
   --text-2xl: 4rem;       /* 64px */
   --text-2xl--line-height: 1;
 
-  /* colour: warm black and copper. No neutral grey anywhere: every quiet tone is brown or sand. */
-  --color-bg: #120c08;          /* page: warm black */
-  --color-surface: #1e1510;     /* panels: dark brown */
-  --color-surface-2: #2a1e16;   /* inputs, hover, selected row */
-  --color-line: #3a2a1f;        /* hairlines */
-  --color-line-strong: #4e3929; /* input borders, emphasised rules */
-  --color-fg: #f6ebdd;          /* text: warm white, 16.5:1 */
-  --color-fg-2: #c9a88c;        /* secondary text: sand, 8.7:1 */
-  --color-fg-3: #b08f74;        /* tertiary text: dark sand, 6.5:1 */
-  --color-primary: #e2683c;     /* copper: the one accent. Buy, chosen side, paid out, agent actions */
-  --color-primary-fg: #120c08;  /* text on copper (5.8:1) */
-  --color-up: #e2683c;          /* success = copper */
-  --color-down: #f07a5e;        /* errors only: warm red, 7.1:1 */
-  --color-warn: #e9b44c;        /* waiting, refunded: amber */
+  /* colour: each one has a single job */
+  --color-bg: #0a0a0b;          /* page */
+  --color-surface: #121214;     /* panels */
+  --color-surface-2: #1a1a1d;   /* inputs, hover, selected row */
+  --color-line: #242428;        /* hairlines */
+  --color-line-strong: #36363c; /* input borders, emphasised rules */
+  --color-fg: #f2f2f3;          /* primary text */
+  --color-fg-2: #a6a6ae;        /* secondary text, 8.3:1 on bg */
+  --color-fg-3: #85858d;        /* tertiary text, 5.6:1 on bg */
+  --color-primary: #f2f2f3;     /* the one primary action is white */
+  --color-primary-fg: #0a0a0b;
+  --color-up: #22ab94;          /* YES, paid out, success */
+  --color-down: #f23645;        /* NO, errors */
+  --color-warn: #e8a33d;        /* waiting, refunded */
 
   /* shape */
   --radius-sm: 6px;
@@ -63,7 +63,7 @@ body {
 }
 
 ::selection {
-  background: rgb(226 104 60 / 0.35);
+  background: rgb(255 255 255 / 0.18);
 }
 
 /* all money, odds and times line up in columns */
@@ -122,8 +122,8 @@ input[type="number"] {
 
 /* a price moved: a brief neutral ring; the arrow carries the direction, the chip keeps its YES/NO colour */
 @keyframes tick {
-  from { box-shadow: inset 0 0 0 1px rgb(226 104 60 / 0.9); }
-  to { box-shadow: inset 0 0 0 1px rgb(226 104 60 / 0); }
+  from { box-shadow: inset 0 0 0 1px rgb(242 242 243 / 0.7); }
+  to { box-shadow: inset 0 0 0 1px rgb(242 242 243 / 0); }
 }
 .flash-up,
 .flash-down { animation: tick 0.9s ease-out; }

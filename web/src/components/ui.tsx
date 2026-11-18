@@ -33,7 +33,7 @@ export function Button({
       disabled={rest.disabled || loading}
       className={cx(
         "inline-flex select-none items-center justify-center gap-2 whitespace-nowrap rounded-md px-4 py-2.5 text-sm font-semibold transition-colors disabled:cursor-not-allowed",
-        variant === "primary" && "bg-primary text-primary-fg hover:brightness-110 active:brightness-95 disabled:bg-surface-2 disabled:text-fg-3",
+        variant === "primary" && "bg-primary text-primary-fg hover:bg-white/85 active:bg-white/75 disabled:bg-surface-2 disabled:text-fg-3",
         variant === "secondary" &&
           "border border-line-strong bg-transparent text-fg hover:bg-surface-2 disabled:border-line disabled:text-fg-3",
         variant === "quiet" && "px-2 text-fg-2 underline-offset-4 hover:text-fg hover:underline",

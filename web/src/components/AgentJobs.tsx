@@ -97,7 +97,7 @@ function Watches({ jobs, now }: { jobs: AgentActivity["jobs"]; now: number }) {
             <li key={w.id} className="rounded-xl bg-surface-2 px-3 py-2">
               <div className="flex items-center justify-between gap-2">
                 <p className="text-xs font-medium">
-                  #{w.id} · {w.asset} <span className={w.outcome === "yes" ? "text-fg" : "text-fg-2"}>{w.outcome.toUpperCase()}</span> ·{" "}
+                  #{w.id} · {w.asset} <span className={w.outcome === "yes" ? "text-up" : "text-down"}>{w.outcome.toUpperCase()}</span> ·{" "}
                   {w.payout} USDC · every {w.horizon} · max {w.maxPrice.toFixed(2)}
                 </p>
                 <button
@@ -123,7 +123,7 @@ function Pulse({ ok, idle }: { ok: boolean; idle?: boolean }) {
   return (
     <span className="relative flex size-2">
       {ok && <span className="absolute inline-flex size-full animate-ping rounded-full bg-up opacity-50" />}
-      <span className={cx("relative inline-flex size-2 rounded-full", idle ? "bg-line-strong" : ok ? "bg-up" : "bg-warn")} />
+      <span className={cx("relative inline-flex size-2 rounded-full", idle ? "bg-fg-3" : ok ? "bg-up" : "bg-warn")} />
     </span>
   );
 }
