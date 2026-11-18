@@ -195,22 +195,6 @@ function AutopilotCard({ ap, now }: { ap: Autopilot; now: number }) {
           </span>
         ))}
       </div>
-      <ul className="mt-2 grid grid-cols-2 gap-x-3 text-[11px] leading-[1.35rem] text-fg-3">
-        <li>downside cover only</li>
-        <li>one policy per asset</li>
-        <li>
-          strike {ap.rules.minDistance * 100}% to +{ap.rules.maxDistance * 100}% of spot
-        </li>
-        <li>
-          {ap.rules.minCost.toFixed(2)}–{ap.rules.maxCost.toFixed(2)} per $1
-        </li>
-        <li className="col-span-2">size ≈ loss on a {ap.rules.hedgeMove * 100}% drop</li>
-      </ul>
-      <p className="mt-1 text-[11px] text-fg-3">
-        {ap.enabled
-          ? `Reviews each finding, at least every ${Math.round(ap.reviewEverySec / 60)} min. Last decision ${ago(ap.lastDecisionAt, now)}.`
-          : "Off. Findings are logged, but Grok won't act on them."}
-      </p>
     </div>
   );
 }
