@@ -108,7 +108,47 @@ export type AgentStatus = {
   dailyBudgetUsdc: string;
   spentTodayUsdc: string;
   model: string;
+  screenerIntervalSec?: number;
+  sampleMarkets?: boolean;
   actions: AgentAction[];
+};
+
+export type ChatStep = { tool: string; label: string; ok: boolean; detail?: string; url?: string; policyId?: number };
+export type ChatMessage = { role: "user" | "assistant"; content: string; steps?: ChatStep[] };
+
+export type AgentEvent = {
+  id: number;
+  at: number;
+  kind: "scan" | "finding" | "onchain" | "action" | "watch" | "error";
+  title: string;
+  detail: string | null;
+  instrumentSymbol: string | null;
+  policyId: number | null;
+  tx: string | null;
+  url: string | null;
+};
+
+type JobStat = { lastRunAt: number | null; lastMs: number | null; lastError: string | null; runs: number };
+export type AgentWatch = {
+  id: number;
+  asset: string;
+  outcome: Outcome;
+  horizon: string;
+  payout: number;
+  maxPrice: number;
+  note: string;
+  createdAt: number;
+  lastRun: number | null;
+  lastResult: string | null;
+};
+export type AgentActivity = {
+  jobs: {
+    intervalSec: number;
+    screener: JobStat & { marketsScanned: number; findings: number };
+    onchain: JobStat & { policiesTracked: number; freeLiquidityUsdc: string | null };
+    watches: JobStat & { list: AgentWatch[] };
+  };
+  events: AgentEvent[];
 };
 
 export type AgentRun = {
@@ -188,6 +228,14 @@ export const api = {
       body: JSON.stringify({ message }),
     }),
   agent: () => call<AgentStatus>("/agent"),
+  activity: () => call<AgentActivity>("/agent/activity"),
+  chat: (messages: ChatMessage[]) =>
+    call<{ reply: string; steps: ChatStep[]; model: string }>("/agent/chat", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ messages: messages.map(({ role, content }) => ({ role, content })) }),
+    }),
+  stopWatch: (id: number) => call<{ stopped: boolean }>(`/agent/watches/${id}/stop`, { method: "POST" }),
   runAgent: (message: string) =>
     call<AgentRun>("/agent/run", {
       method: "POST",

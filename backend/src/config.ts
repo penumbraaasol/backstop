@@ -59,9 +59,17 @@ const schema = z.object({
   AGENT_MAX_PAYOUT: z.coerce.number().int().positive().default(3),
   AGENT_DAILY_BUDGET_USDC: z.coerce.number().positive().default(5),
 
+  /** development only: serve sample markets when Gemini's public API is down. Refused in production. */
+  MOCK_MARKETS: z.preprocess((v) => v === "true" || v === "1", z.boolean()).default(false),
+  /** how often the agent's market screener and watches run */
+  SCREENER_INTERVAL_MS: z.coerce.number().default(30_000),
+
   // unused by the backend, accepted so a shared .env validates
   PRIVATE_KEY_DEPLOYER: optionalKey,
 });
 
 export const cfg = schema.parse(process.env);
+if (cfg.MOCK_MARKETS && process.env.NODE_ENV === "production") {
+  throw new Error("MOCK_MARKETS is for local development only and can't run in production");
+}
 export type Config = typeof cfg;

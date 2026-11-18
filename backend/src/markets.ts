@@ -75,6 +75,7 @@ export function toView(e: GeminiEvent, c: GeminiContract): MarketView | undefine
 let cache: { key: string; at: number; data: MarketView[] } | undefined;
 
 export async function curatedMarkets(category = "crypto", perSeries = 3): Promise<MarketView[]> {
+  if (cfg.MOCK_MARKETS) return sampleMarkets(perSeries);
   const key = `${category}:${perSeries}`;
   if (cache && cache.key === key && Date.now() - cache.at < 5_000) return cache.data;
 
@@ -98,4 +99,57 @@ export async function curatedMarkets(category = "crypto", perSeries = 3): Promis
   });
   cache = { key, at: Date.now(), data };
   return data;
+}
+
+// --- development only: sample markets for when Gemini's public API is down -------------------
+const SAMPLE = [
+  { asset: "BTC", spot: 64_300, step: 50 },
+  { asset: "ETH", spot: 1_800, step: 5 },
+  { asset: "SOL", spot: 74.5, step: 0.25 },
+  { asset: "XRP", spot: 0.98, step: 0.005 },
+];
+
+/** Deterministic, slowly drifting prices so the UI and the screener see realistic movement. */
+function sampleMarkets(perSeries: number): MarketView[] {
+  const nowMs = Date.now();
+  const out: MarketView[] = [];
+  for (const [mins, kind, series] of [
+    [5, "5m", "05M"],
+    [15, "15m", "15M"],
+    [60, "other", "1H"],
+  ] as const) {
+    const period = mins * 60_000;
+    for (let w = 1; w <= perSeries; w++) {
+      const end = Math.ceil(nowMs / period) * period + (w - 1) * period;
+      const start = end - period;
+      for (const [i, a] of SAMPLE.entries()) {
+        const t = nowMs / 30_000; // moves every 30 s
+        const drift = Math.sin(t / 3 + i * 1.7 + w) * 0.12 + Math.sin(t / 11 + i) * 0.06;
+        const yes = Math.min(0.92, Math.max(0.08, +(0.5 + drift).toFixed(2)));
+        const no = Math.min(0.95, +(1.02 - yes).toFixed(2));
+        const strike = (a.spot + (w - 2) * a.step).toFixed(a.spot > 10 ? 2 : 4);
+        const when = new Date(end);
+        const ticker = `${a.asset}${series}${when.toISOString().slice(2, 16).replace(/[-T:]/g, "")}`;
+        out.push({
+          instrumentSymbol: `GEMI-${ticker}-SAMPLE`,
+          eventTicker: ticker,
+          title: `${a.asset} price at ${when.toISOString().slice(11, 16)} UTC (sample)`,
+          label: "Up",
+          question: `${a.asset} is at or above $${Number(strike).toLocaleString("en-US")} at ${when.toISOString().slice(11, 16)} UTC`,
+          category: "crypto",
+          series: `${a.asset}${series}`,
+          kind,
+          startTime: new Date(start).toISOString(),
+          expiry: when.toISOString(),
+          secondsToExpiry: Math.floor((end - nowMs) / 1000),
+          strike,
+          askYes: yes,
+          askNo: no,
+          imageUrl: null,
+          termsLink: null,
+        });
+      }
+    }
+  }
+  return out.filter((m) => m.secondsToExpiry > cfg.MIN_SECONDS_TO_EXPIRY).sort((a, b) => a.secondsToExpiry - b.secondsToExpiry);
 }

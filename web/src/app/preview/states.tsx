@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { MarketPicker } from "@/components/MarketPicker";
+import { AgentChat } from "@/components/AgentChat";
+import type { ChatMessage } from "@/lib/api";
 import { Leader, ScheduleView, type ScheduleProps } from "@/components/ScheduleView";
 import { PolicyEntry } from "@/components/PolicyEntry";
 import { Button, Eyebrow } from "@/components/ui";
@@ -98,6 +100,25 @@ const POLICIES: [string, PolicyTimeline][] = [
   ],
 ];
 
+const CHAT: ChatMessage[] = [
+  { role: "user", content: "I hold 0.3 BTC. Protect me from a dip in the next 15 minutes, about 2 USDC." },
+  {
+    role: "assistant",
+    content:
+      "Done. You're long BTC, so I bought **NO on BTC ≥ $64,300 at 06:15 UTC**: it pays if BTC finishes below that.\n\n- Policy No. 14, 2.00 USDC of cover\n- Premium 1.08 USDC (2 × (0.51 + 0.03))\n- Hedge order goes to Gemini now; you can follow it on the right",
+    steps: [
+      { tool: "screen_markets", ok: true, label: "Screened 48 live Gemini markets", detail: "3 match BTC · 15m" },
+      { tool: "buy_cover", ok: true, label: "Bought policy No. 14 on Arc", detail: "1.08 USDC for 2.00 USDC of cover", url: "https://explorer.testnet.arc.io/tx/0xaaaa" },
+    ],
+  },
+  { role: "user", content: "Keep me covered on every 15 minute window while it's cheaper than 0.55." },
+  {
+    role: "assistant",
+    content: "Watch #2 is running. Every 30 seconds I check the next BTC 15-minute window and buy 2 USDC of NO cover once per window, but only while the ask is at or below 0.55.",
+    steps: [{ tool: "start_watch", ok: true, label: "Started watch #2", detail: "BTC NO · every 15m window · max 0.55" }],
+  },
+];
+
 const TIMES = { purchased: T0, resolved: T0 + 615, settled: T0 + 617 };
 
 /** Sample markets whose prices drift every second, so the live row details can be reviewed offline. */
@@ -172,6 +193,12 @@ export function PreviewStates() {
       <div className="mt-6 max-w-md space-y-1.5 text-sm">
         <Leader label="Text on background" value="#f2f2f3 / #0a0a0b" />
         <Leader label="YES / NO" value="#22ab94 / #f23645" />
+      </div>
+
+      <div className="mt-12 max-w-3xl">
+        <Frame name="Grok agent chat: a purchase and a watch">
+          <AgentChat seed={CHAT} />
+        </Frame>
       </div>
 
       <div className="mt-12 max-w-3xl">

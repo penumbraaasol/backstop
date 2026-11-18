@@ -11,7 +11,9 @@ import { curatedMarkets } from "./markets.js";
 import { formatUsdc, makeQuote, QuoteError } from "./quotes.js";
 import { resolveOnce } from "./resolver.js";
 import { allowAssist, suggestCover } from "./assist.js";
-import { agentAddress, agentEnabled, agentStatus, runAgent } from "./agent.js";
+import { agentAddress, agentEnabled, agentStatus, recentEvents, runAgent, stopWatch } from "./agent.js";
+import { chat, chatBody } from "./chat.js";
+import { jobsStatus, runJobsOnce } from "./jobs.js";
 
 const app = Fastify({ logger: { level: "info" }, disableRequestLogging: true });
 await app.register(cors, { origin: true });
@@ -91,6 +93,22 @@ app.post("/assist", async (req, reply) => {
 });
 
 app.get("/agent", async () => agentStatus());
+app.get("/agent/activity", async () => ({ jobs: jobsStatus(), events: recentEvents(40) }));
+
+app.post("/agent/chat", async (req, reply) => {
+  const parsed = chatBody.safeParse(req.body);
+  if (!parsed.success) return reply.code(400).send({ error: "bad_request", message: "Send a message." });
+  if (!allowAssist(req.ip, 8)) return reply.code(429).send({ error: "rate_limited", message: "Too many messages. Give it a minute." });
+  try {
+    return await chat(parsed.data.messages);
+  } catch (e) {
+    if (e instanceof QuoteError) return reply.code(e.status).send({ error: e.code, message: e.message });
+    req.log.error(e);
+    return reply.code(502).send({ error: "upstream", message: (e as Error).message });
+  }
+});
+
+app.post("/agent/watches/:id/stop", async (req) => ({ stopped: stopWatch(Number((req.params as { id: string }).id)) }));
 
 app.post("/agent/run", async (req, reply) => {
   const parsed = assistBody.safeParse(req.body);
@@ -186,6 +204,8 @@ if (cfg.RUN_WORKERS) {
     await hedgePending();
   });
   loop("resolver", cfg.RESOLVER_INTERVAL_MS, resolveOnce);
+  loop("agent-jobs", cfg.SCREENER_INTERVAL_MS, runJobsOnce);
+  setTimeout(() => void runJobsOnce(), 3_000);
 }
 
 await app.listen({ port: cfg.PORT, host: "0.0.0.0" });

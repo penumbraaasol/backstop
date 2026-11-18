@@ -87,11 +87,46 @@ CREATE TABLE IF NOT EXISTS agent_actions (
   model             TEXT NOT NULL
 );
 
+-- the agent's activity feed: screening findings, on-chain changes, actions
+CREATE TABLE IF NOT EXISTS agent_events (
+  id                INTEGER PRIMARY KEY AUTOINCREMENT,
+  at                INTEGER NOT NULL,
+  kind              TEXT NOT NULL,    -- scan | finding | onchain | action | watch | error
+  title             TEXT NOT NULL,
+  detail            TEXT,
+  instrument_symbol TEXT,
+  policy_id         INTEGER,
+  tx                TEXT
+);
+
+-- standing orders the agent keeps running: "hold X USDC of cover on <asset> <side> each <horizon> window"
+CREATE TABLE IF NOT EXISTS agent_watches (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  created_at  INTEGER NOT NULL,
+  asset       TEXT NOT NULL,
+  outcome     TEXT NOT NULL,          -- yes | no
+  horizon     TEXT NOT NULL,          -- 5m | 15m | 1h
+  payout      INTEGER NOT NULL,
+  max_price   REAL NOT NULL,          -- only buy while the ask is at or below this
+  note        TEXT NOT NULL,
+  active      INTEGER NOT NULL DEFAULT 1,
+  last_symbol TEXT,                   -- window already covered, so it buys once per window
+  last_run    INTEGER,
+  last_result TEXT
+);
+
 CREATE TABLE IF NOT EXISTS kv (
   key   TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
 `);
+
+// columns added after the first deploy
+try {
+  db.exec("ALTER TABLE agent_actions ADD COLUMN source TEXT NOT NULL DEFAULT 'button'");
+} catch {
+  /* already there */
+}
 
 export function kvGet(key: string): string | undefined {
   const row = db.prepare("SELECT value FROM kv WHERE key = ?").get(key) as { value: string } | undefined;
