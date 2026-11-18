@@ -137,3 +137,20 @@ input[type="number"] {
 @media (prefers-reduced-motion: reduce) {
   .tape { animation: none; }
 }
+
+/* a light island inside the dark page (the Grok chat window). Re-points the same tokens, so every
+   component inside renders light without its own styles. Contrast: fg 19.8:1, fg-2 7.4:1, fg-3 5.3:1 on white. */
+.light-scope {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-2: #f3f3f4;
+  --color-line: #e7e7e9;
+  --color-line-strong: #d4d4d8;
+  --color-fg: #0a0a0b;
+  --color-fg-2: #55555c;
+  --color-fg-3: #6b6b73;
+  --color-up: #0e7c69;
+  --color-down: #c8202f;
+  color: var(--color-fg);
+  color-scheme: light;
+}

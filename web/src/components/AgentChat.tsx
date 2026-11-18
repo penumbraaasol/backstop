@@ -78,7 +78,7 @@ export function AgentChat({ seed }: { seed?: ChatMessage[] } = {}) {
   const empty = messages.length === 0;
 
   return (
-    <div className="flex h-[640px] flex-col overflow-hidden rounded-[22px] border border-line bg-surface">
+    <div className="light-scope flex h-[640px] flex-col overflow-hidden rounded-[22px] border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-5 py-3">
         <p className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <GrokMark className="size-5 text-fg" />
