@@ -2,7 +2,10 @@
 
 **Hedge a real-world event in one click.** Buy cover in USDC on Arc; Backstop prices it from Gemini's live prediction-market odds and hedges it by buying the matching Gemini contracts. If the event happens, the smart contract pays you.
 
-> UBC 2026 Hackathon · Track: DeFi and Onchain Applications · Chain award: Best use of Arc · Bounties: Gemini Prediction Markets, Grok Bot
+> UBC 2026 Hackathon
+> Track: DeFi and Onchain Applications
+> Chain award: Best use of Arc
+> Bounties: Gemini Prediction Markets, Grok Bot
 
 **Live app:** _added after deploy_ · **Demo video:** _added after recording_ · **Contract:** [`0x3c7c…4A05` on Arc testnet](https://explorer.testnet.arc.io/address/0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05)
 
