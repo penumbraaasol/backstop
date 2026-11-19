@@ -1,4 +1,5 @@
 import { Leader } from "./ScheduleView";
+import { GrokMark } from "./logos";
 import { Eyebrow } from "./ui";
 
 const STEPS = [
@@ -55,6 +56,30 @@ export function HowItWorks() {
               </li>
             ))}
           </ol>
+
+          <div className="light-scope mt-12 overflow-hidden rounded-[22px] border border-line bg-surface">
+            <div className="flex items-center justify-between border-b border-line px-5 py-3">
+              <p className="flex items-center gap-2 text-sm font-semibold tracking-tight">
+                <GrokMark className="size-5 text-fg" />
+                Grok Bot
+              </p>
+              <span className="text-xs text-fg-3">your guardrails</span>
+            </div>
+            <div className="px-5 pb-2 pt-5">
+              <h3 className="text-lg font-semibold tracking-[-0.02em]">You set Grok&apos;s guardrails</h3>
+              <p className="mt-1.5 text-sm text-fg-2">
+                The Grok Bot acts on its own, but always inside the rules you give it. Change them any time on the Grok Bot page.
+              </p>
+              <dl className="mt-3">
+                {GUARDRAILS.map(([k, v], i) => (
+                  <div key={k} className={i > 0 ? "border-t border-line py-3" : "py-3"}>
+                    <dt className="text-sm font-medium">{k}</dt>
+                    <dd className="mt-0.5 text-sm text-fg-2">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
         </div>
 
         <div className="space-y-14 lg:pt-[5.5rem]">
@@ -79,21 +104,6 @@ export function HowItWorks() {
             <h3 className="border-b border-line pb-3 font-display text-lg font-semibold tracking-tight">If something goes wrong</h3>
             <dl className="mt-1">
               {PROTECTIONS.map(([k, v]) => (
-                <div key={k} className="border-b border-line py-3">
-                  <dt className="font-medium">{k}</dt>
-                  <dd className="mt-0.5 text-sm text-fg-2">{v}</dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-
-          <div>
-            <h3 className="border-b border-line pb-3 font-display text-lg font-semibold tracking-tight">You set Grok&apos;s guardrails</h3>
-            <p className="mt-3 text-sm text-fg-2">
-              The Grok Bot acts on its own, but always inside the rules you give it. Change them any time on the Grok Bot page.
-            </p>
-            <dl className="mt-1">
-              {GUARDRAILS.map(([k, v]) => (
                 <div key={k} className="border-b border-line py-3">
                   <dt className="font-medium">{k}</dt>
                   <dd className="mt-0.5 text-sm text-fg-2">{v}</dd>
