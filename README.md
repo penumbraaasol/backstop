@@ -9,7 +9,7 @@
 
 **Live app:** https://backstop-hq.vercel.app<br>
 **Backend API:** https://backstop-production-0e6db23c.up.railway.app/health<br>
-**Demo video:** (https://drive.google.com/file/d/1yWOTPDgifPcNrUrQkvkNxAKHdZk2HWvx/view?usp=sharing)
+**Demo video:** https://drive.google.com/file/d/1yWOTPDgifPcNrUrQkvkNxAKHdZk2HWvx/view?usp=sharing
 **Contract:** [`0x3c7c…4A05` on Arc testnet](https://explorer.testnet.arc.io/address/0x3c7cdb6658BbcE924dCBD6327FCc5B72B3624A05)
 
 | | |
