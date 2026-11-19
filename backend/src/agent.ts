@@ -54,7 +54,7 @@ export function recentEvents(limit = 40) {
   const rows = db
     .prepare(
       `SELECT * FROM agent_events WHERE id IN (
-         SELECT id FROM agent_events ORDER BY id DESC LIMIT ?
+         SELECT id FROM (SELECT id FROM agent_events ORDER BY id DESC LIMIT ?)
          UNION
          SELECT id FROM (SELECT id FROM agent_events WHERE kind IN ('decision', 'action') AND at > ? ORDER BY id DESC LIMIT 40)
        ) ORDER BY id DESC`,
