@@ -100,23 +100,34 @@ Demo config: max payout 20 USDC per policy, max exposure 50 USDC per market, ref
 
 ## Verified on Arc testnet
 
-Every path has run end to end against the deployed contract:
+Every path has run end to end against the deployed contract, with real transactions you can open on the explorer.
 
-| Policy | Hedge | Result | Transaction |
+### Policies that paid out
+
+The covered outcome happened, Gemini's result was posted on Arc, and the contract paid the buyer automatically.
+
+| Policy | Bought by | Cover | Premium → payout | Hedge on Gemini | Purchase | Result posted | Payout |
+|---|---|---|---|---|---|---|---|
+| No. 1 | buyer | BTC up in the 5-minute window to 03:30 UTC, Nov 17 (YES) | 1.06 → **2.00 USDC** (1.9×) | simulated fill, 2 YES at 0.50 | [`0xd02f…c010e`](https://explorer.testnet.arc.io/tx/0xd02f5ec968d56b5a51fa493be5667c71f859a58fd4917ce841263909a68c010e) | [`0x8dcc…539d2`](https://explorer.testnet.arc.io/tx/0x8dcc4d54ee631d38cadd7bc1f874b0134fcb5daa903b9ec2e729cb6411b539d2) | [`0x0c32…4e7b2`](https://explorer.testnet.arc.io/tx/0x0c32e1772e058b25542d32f1544b50bccd1f650574385f2f626e4699ced4e7b2) |
+| No. 3 | buyer | BTC at or above $64,400 at 04:00 UTC, Nov 17 (YES) | 1.12 → **2.00 USDC** (1.8×) | real sandbox order, 2 YES filled at 0.43 | [`0xa6ac…ff877`](https://explorer.testnet.arc.io/tx/0xa6ac97d4e4cf253851ebd090237222169dcdcf890413f1e6e3787677e67ff877) | [`0x1978…aafe4`](https://explorer.testnet.arc.io/tx/0x1978cf10f8a15e0bd8099cd4b91df8f9696bb1afad9453092175b3ce640aafe4) | [`0x69f4…af2b4`](https://explorer.testnet.arc.io/tx/0x69f46ec1a9340f796aef8d6e5b3ed2cea0cc17547eee94e22c731f3a585af2b4) |
+| No. 12 | **Grok Bot (autopilot)** | BTC below $63,000 at 22:00 UTC, Nov 18 (NO): downside cover for its BTC | 2.58 → **6.00 USDC** (2.3×) | real sandbox order, 6 NO filled at 0.40 | [`0xd6ea…f1f65`](https://explorer.testnet.arc.io/tx/0xd6eae4df91f043615d7fbb3d937f2c85e0c56b26c6f42df181c2429e36bf1f65) | [`0xc286…5d2c0`](https://explorer.testnet.arc.io/tx/0xc286afd438db36e380221ecb3a836774e8cddaeef6e85d2641745e99fe45d2c0) | [`0x22b7…05f51`](https://explorer.testnet.arc.io/tx/0x22b735978069acbd22c0601085a0d975bcc2162878d8c63714ce990639d05f51) |
+
+No. 12 is the full agent loop: Grok's autopilot found the market, wrote its reason ("Hedging 1% BTC drop… strike −0.22% of spot, 0.44 per $1 vs ~41% odds"), bought from its own wallet with no human signature, Backstop hedged it on Gemini, BTC closed below the strike, and the contract paid the bot 6 USDC.
+
+### Safety paths
+
+| Policy | What happened | Result | Transaction |
 |---|---|---|---|
-| #1 | simulated fill | covered outcome happened → **paid out 2 USDC** | see contract history |
-| #2 | forced failure | hedge failed → **premium refunded** | see contract history |
-| #3 | **real Gemini sandbox order**: 2 YES filled at 0.43 on `GEMI-BTC2611170400-HI64400` | **paid out 2 USDC** | [`0x69f4…2af4b`](https://explorer.testnet.arc.io/tx/0x69f46ec1a9340f796aef8d6e5b3ed2cea0cc17547eee94e22c731f3a585af2b4) |
-| #4 | real Gemini sandbox fill-or-kill order, not filled (sandbox ask 0.97 > limit 0.12) | **premium refunded** | [`0xa571…e32c`](https://explorer.testnet.arc.io/tx/0xa571ad0977a4543ecb0169fadac198bf502328b72b0280ac25aac2884b3ce32c) |
+| No. 2 | hedge failure forced on purpose | **premium refunded** automatically | see contract history |
+| No. 4 | real sandbox fill-or-kill order not filled (sandbox ask 0.97 above the 0.12 limit) | **premium refunded** automatically | [`0xa571…ce32c`](https://explorer.testnet.arc.io/tx/0xa571ad0977a4543ecb0169fadac198bf502328b72b0280ac25aac2884b3ce32c) |
+| No. 13 | Grok Bot cover on BTC below $63,100; BTC stayed above | **expired**: the payout lock was released back to the treasury | see the Grok Bot's policy history |
 
-The Grok Bot, buying from its own wallet:
+### Grok Bot purchases
 
-| Policy | How | Hedge | Transaction |
-|---|---|---|---|
-| #12 | **autopilot**: "Hedging 1% BTC drop… strike −0.22% of spot, 0.44 per $1 vs ~41% odds" | Gemini sandbox, 6 NO filled at 0.40 | [`0xd6ea…1bf65`](https://explorer.testnet.arc.io/tx/0xd6eae4df91f043615d7fbb3d937f2c85e0c56b26c6f42df181c2429e36bf1f65) |
-| #15 | **chat**: "protect my ETH against a drop in the next hour with about 3 USDC" | Gemini sandbox | [`0x0a6a…5af5e`](https://explorer.testnet.arc.io/tx/0x0a6ac9358536208f324d395050031d46589f7f19f684fbaac3c98e893b05af5e) |
-
-Treasury accounting checks out: 12 USDC seed + 1.06 + 1.12 premiums − 2 − 2 payouts = 10.18 USDC free, 0 locked.
+| Policy | How | Hedge | Outcome | Purchase |
+|---|---|---|---|---|
+| No. 12 | **autopilot**, reason logged in the activity feed | Gemini sandbox, 6 NO filled at 0.40 | **paid out 6 USDC** | [`0xd6ea…f1f65`](https://explorer.testnet.arc.io/tx/0xd6eae4df91f043615d7fbb3d937f2c85e0c56b26c6f42df181c2429e36bf1f65) |
+| No. 15 | **chat**: "protect my ETH against a drop in the next hour with about 3 USDC" | Gemini sandbox | expired (ETH held above the strike) | [`0x0a6a…5af5e`](https://explorer.testnet.arc.io/tx/0x0a6ac9358536208f324d395050031d46589f7f19f684fbaac3c98e893b05af5e) |
 
 ## Smart contract
 
