@@ -112,7 +112,7 @@ app.post("/agent/chat", async (req, reply) => {
 const autopilotBody = z.object({
   enabled: z.boolean().optional(),
   mandate: z.string().trim().min(10).max(400).optional(),
-  holdings: z.array(z.object({ asset: z.string().min(2).max(6), amount: z.coerce.number().positive() })).min(1).max(4).optional(),
+  holdings: z.array(z.object({ asset: z.string().min(2).max(6), amount: z.coerce.number().positive() })).min(1).max(6).optional(),
 });
 app.get("/agent/autopilot", async () => autopilotState());
 app.post("/agent/autopilot", async (req, reply) => {

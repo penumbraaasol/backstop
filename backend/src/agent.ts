@@ -50,7 +50,16 @@ export function logEvent(
 }
 
 export function recentEvents(limit = 40) {
-  const rows = db.prepare("SELECT * FROM agent_events ORDER BY id DESC LIMIT ?").all(limit) as {
+  // the latest events, plus Grok's decisions and purchases from the last 24 h, so screener findings never bury them
+  const rows = db
+    .prepare(
+      `SELECT * FROM agent_events WHERE id IN (
+         SELECT id FROM agent_events ORDER BY id DESC LIMIT ?
+         UNION
+         SELECT id FROM (SELECT id FROM agent_events WHERE kind IN ('decision', 'action') AND at > ? ORDER BY id DESC LIMIT 40)
+       ) ORDER BY id DESC`,
+    )
+    .all(limit, now() - 86_400) as {
     id: number;
     at: number;
     kind: EventKind;
