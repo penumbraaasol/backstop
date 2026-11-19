@@ -18,7 +18,7 @@
 | **Priced by** | Gemini Prediction Markets live order book: premium = N × (p + s). |
 | **Backed by** | A matching Gemini position bought for every policy. The prediction market is the oracle *and* the reinsurer. |
 | **Settled on** | Arc, Circle's L1 where USDC is the gas token and the settlement asset. |
-| **Run by** | A Grok Bot with its own wallet that screens the markets and buys cover on its own, within hard limits. |
+| **Run by** | A Grok Bot with its own wallet that screens the markets and buys cover on its own, inside guardrails you set. |
 
 ## Grok's role
 
@@ -287,9 +287,11 @@ corepack pnpm dev               # http://localhost:3000
 5. **Decide.** Grok (structured output) picks one candidate or holds, and must cite the numbers. Every decision is logged and shown in the app.
 6. **Re-check and buy.** The server re-validates the pick (size ≤ 1.5× suggested, asset not already covered, live price ≤ decided price + 2¢) and buys through the same signed-quote → `buyPolicy` path as a human.
 
-**Safety limits:**
-- 10 USDC max payout per policy
-- 25 USDC of premiums per UTC day (refunds don't count)
+**Your guardrails.** You stay in control of the bot. On the Grok Bot page you write its mandate in plain English, set a max payout per policy and a daily budget, and switch the autopilot on or off. Grok follows these on every decision, and the server enforces them before anything is signed (`POST /agent/autopilot`).
+
+**Server hard caps** (underneath your guardrails, which can only tighten them):
+- 20 USDC max payout per policy (`AGENT_MAX_PAYOUT`, the contract's own per-policy cap)
+- 25 USDC of premiums per UTC day (`AGENT_DAILY_BUDGET_USDC`; refunds don't count)
 - Balance check
 - One purchase at a time
 - One open policy per asset
