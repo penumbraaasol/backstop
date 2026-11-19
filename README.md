@@ -102,7 +102,7 @@ Demo config: max payout 20 USDC per policy, max exposure 50 USDC per market, ref
 
 Every path has run end to end against the deployed contract, with real transactions you can open on the explorer.
 
-### Policies that paid out
+### Examples in action
 
 The covered outcome happened, Gemini's result was posted on Arc, and the contract paid the buyer automatically.
 
