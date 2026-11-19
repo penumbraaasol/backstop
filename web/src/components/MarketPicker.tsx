@@ -110,7 +110,7 @@ export function MarketPicker({
         </div>
       </div>
 
-      <div className={cx(ROW, "border-b border-line py-2 text-xs text-fg-2")}>
+      <div className={cx(ROW, "border-b border-line py-2 pl-3 pr-1 text-xs text-fg-2")}>
         <span>Outcome</span>
         <span className="hidden text-right sm:block">Yes, live</span>
         <span className="hidden text-right sm:block">Closes</span>
