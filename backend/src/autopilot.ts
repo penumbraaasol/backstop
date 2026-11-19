@@ -58,6 +58,15 @@ function holdings(): Holding[] {
   return DEFAULT_HOLDINGS;
 }
 
+/** The user's own guardrails, always inside the server's hard caps (AGENT_MAX_PAYOUT, AGENT_DAILY_BUDGET_USDC). */
+function userLimits() {
+  const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
+  const maxPayout = clamp(Math.round(Number(kvGet("autopilot:maxPayout") ?? cfg.AGENT_MAX_PAYOUT) || cfg.AGENT_MAX_PAYOUT), 1, cfg.AGENT_MAX_PAYOUT);
+  const dailyBudgetUsdc = clamp(Number(kvGet("autopilot:dailyBudget") ?? cfg.AGENT_DAILY_BUDGET_USDC) || cfg.AGENT_DAILY_BUDGET_USDC, 1, cfg.AGENT_DAILY_BUDGET_USDC);
+  return { maxPayout, dailyBudgetUsdc, capMaxPayout: cfg.AGENT_MAX_PAYOUT, capDailyBudgetUsdc: cfg.AGENT_DAILY_BUDGET_USDC };
+}
+const userBudget = () => BigInt(Math.round(userLimits().dailyBudgetUsdc * 1_000_000));
+
 // last valuation, so the UI can show it without waiting for the next run
 let lastValuation: { asset: string; amount: number; spot: number | null; valueUsd: number | null }[] = [];
 
@@ -67,6 +76,7 @@ export function autopilotState() {
     mandate: kvGet("autopilot:mandate") ?? DEFAULT_MANDATE,
     holdings: lastValuation.length ? lastValuation : holdings().map((h) => ({ ...h, spot: null, valueUsd: null })),
     rules: RULES,
+    limits: userLimits(),
     lastDecisionAt: Number(kvGet("autopilot:lastDecisionAt") ?? 0) || null,
     lastReviewAt: Number(kvGet("autopilot:lastReviewAt") ?? 0) || null,
     reviewEverySec: REVIEW_EVERY_SEC,
@@ -74,7 +84,13 @@ export function autopilotState() {
   };
 }
 
-export function setAutopilot(p: { enabled?: boolean; mandate?: string; holdings?: Holding[] }) {
+export function setAutopilot(p: { enabled?: boolean; mandate?: string; holdings?: Holding[]; maxPayout?: number; dailyBudgetUsdc?: number }) {
+  if (p.maxPayout !== undefined || p.dailyBudgetUsdc !== undefined) {
+    if (p.maxPayout !== undefined) kvSet("autopilot:maxPayout", String(Math.round(p.maxPayout)));
+    if (p.dailyBudgetUsdc !== undefined) kvSet("autopilot:dailyBudget", String(p.dailyBudgetUsdc));
+    const l = userLimits();
+    logEvent("watch", "Autopilot limits updated", { detail: `Up to ${l.maxPayout} USDC per policy\n${l.dailyBudgetUsdc} USDC a day` });
+  }
   if (p.enabled !== undefined) {
     kvSet("autopilot:enabled", p.enabled ? "1" : "0");
     logEvent("watch", `Grok autopilot switched ${p.enabled ? "on" : "off"}`);
@@ -135,7 +151,7 @@ async function buildCandidates(markets: MarketView[]) {
     if (!spot) continue;
     const value = spot * h.amount;
     const suggested = Math.max(1, Math.min(cfg.AGENT_MAX_PAYOUT, Math.round(value * RULES.hedgeMove)));
-    const maxPayout = Math.min(cfg.AGENT_MAX_PAYOUT, Math.max(1, Math.round(suggested * RULES.maxSizeMultiple)));
+    const maxPayout = Math.min(userLimits().maxPayout, Math.max(1, Math.round(suggested * RULES.maxSizeMultiple)));
     for (const m of markets) {
       if (m.category !== "crypto" || m.asset !== h.asset || !m.strike) continue; // a directional market with a known strike
       if (m.secondsToExpiry < RULES.minSecondsLeft) continue;
@@ -209,7 +225,8 @@ type Decision = { action: "buy" | "hold"; instrumentSymbol: string | null; payou
 
 async function decide(mandate: string, findings: Finding[], passing: Candidate[], rejected: Candidate[], covered: Set<string>) {
   const balance = await agentBalance();
-  const left = dailyBudget() - spentToday();
+  const cap = userBudget() < dailyBudget() ? userBudget() : dailyBudget();
+  const left = cap - spentToday();
   const book = lastValuation
     .map((h) => `${h.amount} ${h.asset}${h.valueUsd ? ` ≈ $${Math.round(h.valueUsd).toLocaleString("en-US")} at $${h.spot!.toLocaleString("en-US", { maximumFractionDigits: 2 })}` : ""}`)
     .join("; ");
@@ -309,6 +326,14 @@ export async function runAutopilot(findings: Finding[], markets: MarketView[]) {
     const payout = Math.max(1, Math.min(pick.maxPayout, d.payout ?? pick.suggestedPayout));
     if (activePolicyAssets().has(pick.asset)) {
       logEvent("decision", `Hold\n${pick.asset} already covered`, { detail: d.reasoning, symbol: pick.market.instrumentSymbol });
+      return;
+    }
+    // the user's daily budget (the server's own budget is checked again inside buyCover)
+    const premium = BigInt(Math.ceil(payout * pick.cost * 1_000_000));
+    if (spentToday() + premium > userBudget()) {
+      logEvent("decision", "Hold\nyour daily budget is reached", {
+        detail: `This cover would cost about ${pick.cost.toFixed(2)} × ${payout} USDC; your limit is ${userLimits().dailyBudgetUsdc} USDC a day. (${reviewed})`,
+      });
       return;
     }
     logEvent("decision", `Buy\n${d.headline}`, {

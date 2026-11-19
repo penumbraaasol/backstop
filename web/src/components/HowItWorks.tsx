@@ -27,6 +27,14 @@ const PROTECTIONS = [
   ["Size limits", "Caps per policy and per market limit what any single failure can cost."],
 ];
 
+const GUARDRAILS = [
+  ["Your instructions", "Tell Grok in plain English what to protect, against what, and how much you're willing to pay. It checks every decision against that mandate."],
+  ["Max payout per policy", "Cap the size of any single policy Grok buys for you."],
+  ["Daily budget", "Cap how much Grok can spend on premiums in a day. Once it's reached, Grok holds."],
+  ["An off switch", "Pause the autopilot at any moment. Grok keeps watching and logging, but stops buying."],
+  ["Hard limits underneath", "Whatever you choose, the server enforces its own caps and checks every purchase before it's signed."],
+];
+
 export function HowItWorks() {
   return (
     <section>
@@ -71,6 +79,21 @@ export function HowItWorks() {
             <h3 className="border-b border-line pb-3 font-display text-lg font-semibold tracking-tight">If something goes wrong</h3>
             <dl className="mt-1">
               {PROTECTIONS.map(([k, v]) => (
+                <div key={k} className="border-b border-line py-3">
+                  <dt className="font-medium">{k}</dt>
+                  <dd className="mt-0.5 text-sm text-fg-2">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div>
+            <h3 className="border-b border-line pb-3 font-display text-lg font-semibold tracking-tight">You set Grok&apos;s guardrails</h3>
+            <p className="mt-3 text-sm text-fg-2">
+              The Grok Bot acts on its own, but always inside the rules you give it. Change them any time on the Grok Bot page.
+            </p>
+            <dl className="mt-1">
+              {GUARDRAILS.map(([k, v]) => (
                 <div key={k} className="border-b border-line py-3">
                   <dt className="font-medium">{k}</dt>
                   <dd className="mt-0.5 text-sm text-fg-2">{v}</dd>

@@ -131,8 +131,10 @@ function AutopilotCard({ ap, now }: { ap: Autopilot; now: number }) {
   const qc = useQueryClient();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(ap.mandate);
+  const [maxPayout, setMaxPayout] = useState(String(ap.limits?.maxPayout ?? ""));
+  const [budget, setBudget] = useState(String(ap.limits?.dailyBudgetUsdc ?? ""));
   const save = useMutation({
-    mutationFn: (body: { enabled?: boolean; mandate?: string }) => api.setAutopilot(body),
+    mutationFn: (body: { enabled?: boolean; mandate?: string; maxPayout?: number; dailyBudgetUsdc?: number }) => api.setAutopilot(body),
     onSuccess: () => {
       setEditing(false);
       qc.invalidateQueries({ queryKey: ["agentActivity"] });
@@ -166,10 +168,44 @@ function AutopilotCard({ ap, now }: { ap: Autopilot; now: number }) {
             rows={3}
             className="w-full resize-none rounded-xl border border-line-strong bg-surface-2 px-3 py-2 text-xs text-fg focus:border-fg-3 focus:outline-none"
           />
+          {ap.limits && (
+            <div className="mt-1.5 grid grid-cols-2 gap-2 text-[11px] text-fg-2">
+              {[
+                { label: "Max payout per policy", value: maxPayout, set: setMaxPayout, cap: ap.limits.capMaxPayout },
+                { label: "Daily budget", value: budget, set: setBudget, cap: ap.limits.capDailyBudgetUsdc },
+              ].map((f) => (
+                <label key={f.label} className="block">
+                  {f.label}
+                  <span className="mt-0.5 flex items-center gap-1.5 rounded-lg border border-line-strong bg-surface-2 px-2.5 py-1.5 focus-within:border-fg-3">
+                    <input
+                      type="number"
+                      min={1}
+                      max={f.cap}
+                      value={f.value}
+                      onChange={(e) => f.set(e.target.value)}
+                      className="num w-full bg-transparent text-xs text-fg focus:outline-none"
+                    />
+                    <span className="text-fg-3">USDC</span>
+                  </span>
+                  <span className="text-[10px] text-fg-3">up to {f.cap}</span>
+                </label>
+              ))}
+            </div>
+          )}
           <div className="mt-1 flex justify-end gap-3 text-xs">
             <button onClick={() => setEditing(false)} className="text-fg-2 hover:text-fg">Cancel</button>
-            <button onClick={() => save.mutate({ mandate: draft })} disabled={draft.trim().length < 10 || save.isPending} className="font-medium text-fg hover:underline">
-              Save mandate
+            <button
+              onClick={() =>
+                save.mutate({
+                  mandate: draft,
+                  ...(ap.limits && Number(maxPayout) >= 1 ? { maxPayout: Math.min(ap.limits.capMaxPayout, Math.round(Number(maxPayout))) } : {}),
+                  ...(ap.limits && Number(budget) >= 1 ? { dailyBudgetUsdc: Math.min(ap.limits.capDailyBudgetUsdc, Number(budget)) } : {}),
+                })
+              }
+              disabled={draft.trim().length < 10 || save.isPending}
+              className="font-medium text-fg hover:underline"
+            >
+              Save
             </button>
           </div>
         </div>
@@ -177,9 +213,11 @@ function AutopilotCard({ ap, now }: { ap: Autopilot; now: number }) {
         <button
           onClick={() => {
             setDraft(ap.mandate);
+            setMaxPayout(String(ap.limits?.maxPayout ?? ""));
+            setBudget(String(ap.limits?.dailyBudgetUsdc ?? ""));
             setEditing(true);
           }}
-          title={`${ap.mandate} (click to edit)`}
+          title={`${ap.mandate} (click to edit the mandate and limits)`}
           className="mt-1.5 line-clamp-2 text-left text-xs leading-snug text-fg-2 hover:text-fg"
         >
           &ldquo;{ap.mandate}&rdquo;
@@ -194,6 +232,11 @@ function AutopilotCard({ ap, now }: { ap: Autopilot; now: number }) {
             {h.valueUsd !== null && <span className="ml-1.5 text-fg-2">${Math.round(h.valueUsd).toLocaleString("en-US")}</span>}
           </span>
         ))}
+        {ap.limits && (
+          <span className="num rounded-lg border border-line px-2.5 py-1 text-xs text-fg-2" title="Your limits for the autopilot. Click the mandate to change them.">
+            ≤ {ap.limits.maxPayout} USDC per policy, {ap.limits.dailyBudgetUsdc} USDC a day
+          </span>
+        )}
       </div>
     </div>
   );

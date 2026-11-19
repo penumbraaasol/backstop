@@ -150,6 +150,7 @@ export type Autopilot = {
   mandate: string;
   holdings: { asset: string; amount: number; spot: number | null; valueUsd: number | null }[];
   rules: { minDistance: number; maxDistance: number; minCost: number; maxCost: number; hedgeMove: number; maxSizeMultiple: number };
+  limits?: { maxPayout: number; dailyBudgetUsdc: number; capMaxPayout: number; capDailyBudgetUsdc: number };
   lastDecisionAt: number | null;
   lastReviewAt: number | null;
   reviewEverySec: number;
@@ -251,7 +252,7 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ messages: messages.map(({ role, content }) => ({ role, content })) }),
     }),
-  setAutopilot: (body: { enabled?: boolean; mandate?: string }) =>
+  setAutopilot: (body: { enabled?: boolean; mandate?: string; maxPayout?: number; dailyBudgetUsdc?: number }) =>
     call<Autopilot>("/agent/autopilot", {
       method: "POST",
       headers: { "content-type": "application/json" },
