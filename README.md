@@ -281,7 +281,7 @@ corepack pnpm dev               # http://localhost:3000
 
 **Decision loop** (every 30 s, `backend/src/jobs.ts` → `autopilot.ts`):
 1. **Screen.** Read ~170 live Gemini markets; flag price moves ≥ 8¢, cheap cover (0.05–0.15) and new windows. Watch the agent's policies and the treasury on Arc.
-2. **Value the portfolio.** Hypothetical holdings (default 0.01 BTC, 0.3 ETH) at Gemini spot (`/v1/pubticker`).
+2. **Value the portfolio.** Hypothetical holdings, up to six assets set by the user (the demo holds BTC, ETH, SOL, XRP, HYPE and ZEC), at Gemini spot (`/v1/pubticker`).
 3. **Build candidates.** For each uncovered holding: crypto markets with a known strike, with strike vs spot, cost per $1 (ask + spread), implied odds, and a size equal to the loss on a 1% drop.
 4. **Filter by rules.** Downside cover only; strike −1.5% to +0.3% of spot; cost 0.12–0.60 per $1; ≥ 3 min left; hedgeable on the Gemini venue within 2¢.
 5. **Decide.** Grok (structured output) picks one candidate or holds, and must cite the numbers. Every decision is logged and shown in the app.
