@@ -272,30 +272,20 @@ function PriceChip({
       disabled={!hedgeable}
       onClick={onClick}
       className={cx(
-        "num relative w-[4.5rem] rounded-sm py-1.5 text-sm font-semibold transition-colors",
+        "num inline-flex h-9 w-[4.5rem] items-center justify-center rounded-md text-[14px] font-semibold tabular-nums transition-colors",
         yes
           ? on
             ? "bg-up text-bg"
-            : "bg-up/10 text-up hover:bg-up/20"
+            : "bg-up/15 text-up hover:bg-up/25"
           : on
             ? "bg-down text-bg"
-            : "bg-down/10 text-down hover:bg-down/20",
+            : "bg-down/15 text-down hover:bg-down/25",
         !hedgeable && "cursor-not-allowed opacity-35 hover:bg-transparent",
         changed && dir === 1 && "flash-up",
         changed && dir === -1 && "flash-down",
       )}
     >
       <RollingNumber value={price.toFixed(2)} />
-      {changed && dir ? (
-        <span
-          className={cx(
-            "absolute right-1.5 top-1 text-[8px] leading-none",
-            on ? "text-bg" : dir === 1 ? "text-up" : "text-down",
-          )}
-        >
-          {dir === 1 ? "▲" : "▼"}
-        </span>
-      ) : null}
     </button>
   );
 }
