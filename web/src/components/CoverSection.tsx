@@ -144,8 +144,7 @@ function Intro({ marketCount }: { marketCount?: number }) {
           Hedge a real-world event in one click.
         </h1>
         <p className="mt-5 max-w-xl text-md text-fg-2">
-          Pay a premium in USDC. If the outcome you pick happens, the contract pays you. The price comes from
-          Gemini&apos;s prediction market, and every policy is hedged there.
+          Priced on Gemini&rsquo;s live odds. Settled in USDC on Arc. Hedged on autopilot with Grok.
         </p>
       </div>
       <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line">
