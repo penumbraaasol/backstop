@@ -50,13 +50,13 @@ export function logEvent(
 }
 
 export function recentEvents(limit = 40) {
-  // the latest events, plus Grok's decisions and purchases from the last 24 h, so screener findings never bury them
+  // the latest events, plus Grok's buy decisions and purchases from the last 24 h, so screener findings never bury them
   const rows = db
     .prepare(
       `SELECT * FROM agent_events WHERE id IN (
          SELECT id FROM (SELECT id FROM agent_events ORDER BY id DESC LIMIT ?)
          UNION
-         SELECT id FROM (SELECT id FROM agent_events WHERE kind IN ('decision', 'action') AND at > ? ORDER BY id DESC LIMIT 40)
+         SELECT id FROM (SELECT id FROM agent_events WHERE (kind = 'action' OR (kind = 'decision' AND title LIKE 'Buy%')) AND at > ? ORDER BY id DESC LIMIT 40)
        ) ORDER BY id DESC`,
     )
     .all(limit, now() - 86_400) as {
