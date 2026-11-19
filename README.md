@@ -114,21 +114,6 @@ The covered outcome happened, Gemini's result was posted on Arc, and the contrac
 
 No. 12 is the full agent loop: Grok's autopilot found the market, wrote its reason ("Hedging 1% BTC drop… strike −0.22% of spot, 0.44 per $1 vs ~41% odds"), bought from its own wallet with no human signature, Backstop hedged it on Gemini, BTC closed below the strike, and the contract paid the bot 6 USDC.
 
-### Safety paths
-
-| Policy | What happened | Result | Transaction |
-|---|---|---|---|
-| No. 2 | hedge failure forced on purpose | **premium refunded** automatically | see contract history |
-| No. 4 | real sandbox fill-or-kill order not filled (sandbox ask 0.97 above the 0.12 limit) | **premium refunded** automatically | [`0xa571…ce32c`](https://explorer.testnet.arc.io/tx/0xa571ad0977a4543ecb0169fadac198bf502328b72b0280ac25aac2884b3ce32c) |
-| No. 13 | Grok Bot cover on BTC below $63,100; BTC stayed above | **expired**: the payout lock was released back to the treasury | see the Grok Bot's policy history |
-
-### Grok Bot purchases
-
-| Policy | How | Hedge | Outcome | Purchase |
-|---|---|---|---|---|
-| No. 12 | **autopilot**, reason logged in the activity feed | Gemini sandbox, 6 NO filled at 0.40 | **paid out 6 USDC** | [`0xd6ea…f1f65`](https://explorer.testnet.arc.io/tx/0xd6eae4df91f043615d7fbb3d937f2c85e0c56b26c6f42df181c2429e36bf1f65) |
-| No. 15 | **chat**: "protect my ETH against a drop in the next hour with about 3 USDC" | Gemini sandbox | expired (ETH held above the strike) | [`0x0a6a…5af5e`](https://explorer.testnet.arc.io/tx/0x0a6ac9358536208f324d395050031d46589f7f19f684fbaac3c98e893b05af5e) |
-
 ## Smart contract
 
 `contracts/src/Backstop.sol` (Solidity 0.8.24, OpenZeppelin 5.1).
