@@ -88,7 +88,7 @@ export function setAutopilot(p: { enabled?: boolean; mandate?: string; holdings?
     const h = p.holdings
       .map((x) => ({ asset: x.asset.toUpperCase().trim(), amount: Number(x.amount) }))
       .filter((x) => /^[A-Z]{2,6}$/.test(x.asset) && x.amount > 0)
-      .slice(0, 4);
+      .slice(0, 6);
     if (h.length) {
       kvSet("autopilot:holdings", JSON.stringify(h));
       lastValuation = [];
