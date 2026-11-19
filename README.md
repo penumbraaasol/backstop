@@ -196,7 +196,7 @@ Example: N = 100, p = 0.27, s = 0.03 → premium 30 USDC, hedge 27, margin 3. If
 
 Covering YES buys YES contracts; covering NO buys NO contracts. All math is done in integer USDC base units (6 decimals). Quotes are refused when p + s ≥ 1, because cover would then cost more than it pays.
 
-**Gemini fees.** Gemini's taker fee is `0.07 × C × P × (1 − P)` ([fee schedule](https://www.gemini.com/fees/predictions)), which peaks at $0.0175 per contract at P = 0.5. The 3% spread covers the worst-case taker fee with room for slippage. Hedge orders are limit orders capped at p + `MAX_SLIPPAGE` (default 0.02). Note that a fill above the quoted p eats into the margin.
+**Gemini fees.** Gemini's taker fee is `0.07 × C × P × (1 − P)` ([fee schedule](https://www.gemini.com/fees/predictions)), which peaks at $0.0175 per contract at P = 0.5. The 3¢ spread covers the worst-case taker fee and leaves at least 1.25¢ for slippage. Hedge orders are limit orders capped at p + `MAX_SLIPPAGE` (default 0.02), so a fill near that cap at P ≈ 0.5 can cost up to 0.75¢ per contract more than the spread; in the typical case the fill is at or near p and the spread is margin.
 
 **Capital.** Onchain, every open policy locks its full payout from the treasury float. Offchain, the hedge costs N × p. The float is returned when the Gemini position settles at $1, and the operator rebalances USD → USDC.
 
