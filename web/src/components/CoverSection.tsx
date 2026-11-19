@@ -138,12 +138,12 @@ function Intro({ marketCount }: { marketCount?: number }) {
     ["Network", "Arc Testnet"],
   ];
   return (
-    <div className="grid gap-10 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-end">
+    <div className="grid gap-10 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)] lg:items-end">
       <div>
         <h1 className="font-hero text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.045em] text-balance sm:text-2xl">
           Hedge a real-world event in one click.
         </h1>
-        <p className="mt-5 text-[15px] leading-relaxed text-fg-2">
+        <p className="mt-5 text-[17px] leading-relaxed text-fg-2">
           Pay a premium in USDC. If the outcome you pick happens, the contract pays you.
           <br />
           Priced on Gemini&rsquo;s live odds. Settled in USDC on Arc. Hedged on autopilot with Grok.
